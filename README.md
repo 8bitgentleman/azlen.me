@@ -1,3 +1,3 @@
-# Personal Blog/Wiki Engine
+# Personal Digital Garden Engine
 
-Personal blog powered by Notion. Uses an unofficial python API to pull pages from my Notion workspace and generate a static site.
+Digital Garden powered by Roam Research. Uses several hacks to pull pages from Roam and generate a static site.
