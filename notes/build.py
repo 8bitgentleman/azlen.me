@@ -8,7 +8,7 @@ from ftfy import fix_encoding
 import re
 from pyhiccup.core import convert
 import pprint
-import re
+from re import search
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -33,8 +33,9 @@ def collectIDs(page):
     '''Collects page names and UUIDs'''
     pagestring = json.dumps(page)
 
-    
-    if '#private' in pagestring:  # TODO change to only remove if in page attributess
+    # only remove page if private tag in page attributess
+    personalSearch = search(".*Tags::.*#personal.*", pagestring)
+    if personalSearch is not None:
         print('Private page: [[' + page['title'] + ']]')
         return
 
@@ -50,8 +51,16 @@ def collectChildIDs(object):
     # TODO if tagged private remove children under tag
     if 'children' in object.keys():
         for child in object['children']:
-            block_ids[child['uid']] = child
-            collectChildIDs(child)
+            # block_ids[child['uid']] = child
+            # only remove block if private tag in block
+            personalSearch = search(".*#personal.*", child['string'])
+            if personalSearch is not None:
+                print('Private block: "' + child['string'] + '"')
+                private_blocks[child['uid']] = child
+                collectChildIDs(child)
+            else:
+                block_ids[child['uid']] = child
+                collectChildIDs(child)
 
 
 def processPage(page):
@@ -62,7 +71,6 @@ def processPage(page):
     uuid = page_uuids[title]
 
     children = []
-
     if 'children' in page.keys():
         for child in page['children']:
             children.append({
@@ -127,13 +135,16 @@ def renderBullets(block):
 
     output = '<ul>'
     for child in block['children']:
-        output += '<li>'
-        output += renderMarkdown(child['string'])
+        if child['uid'] in private_blocks:
+            pass
+        else:
+            output += '<li>'
+            output += renderMarkdown(child['string'])
 
-        if 'children' in child.keys():
-            output += renderBullets(child)
+            if 'children' in child.keys():
+                output += renderBullets(child)
 
-        output += '</li>'
+            output += '</li>'
 
     output += '</ul>'
 
@@ -206,9 +217,11 @@ def removePrivateBlocks(page):
 # load json backup
 with open('MattPublic.json', 'r') as f:
     data = json.loads(f.read())
-
 for page in data:  # get page ids
     collectIDs(page)
+
+pp.pprint(list(private_blocks.keys()))
+
 
 for page in data:
     processPage(page)
