@@ -7,6 +7,10 @@ import shortuuid
 from ftfy import fix_encoding
 import re
 from pyhiccup.core import convert
+import pprint
+import re
+
+pp = pprint.PrettyPrinter(indent=4)
 
 templateLoader = jinja2.FileSystemLoader(searchpath="./templates")
 env = jinja2.Environment(loader=templateLoader, extensions=['jinja2_highlight.HighlightExtension'])
@@ -22,25 +26,33 @@ references = {}
 _linksTo = []
 
 page_data = {}
+private_blocks = {}
+
 
 def collectIDs(page):
+    '''Collects page names and UUIDs'''
     pagestring = json.dumps(page)
-    if '#Private' in pagestring:
+
+    
+    if '#private' in pagestring:  # TODO change to only remove if in page attributess
         print('Private page: [[' + page['title'] + ']]')
         return
 
     uuid = shortuuid.uuid(name=page['title'])[:8]
-
     collectChildIDs(page)
 
     page_uuids[page['title']] = uuid
     page_names[uuid] = page['title']
-    
+
+
 def collectChildIDs(object):
+    '''Collects block children names and UUIDs'''
+    # TODO if tagged private remove children under tag
     if 'children' in object.keys():
         for child in object['children']:
             block_ids[child['uid']] = child
             collectChildIDs(child)
+
 
 def processPage(page):
     title = page['title']
@@ -56,7 +68,7 @@ def processPage(page):
             children.append({
                 'html': renderMarkdown(fix_encoding(child['string'])) + renderBullets(child)
             })
-    
+
     template_data = {
         'title': renderMarkdown(title, ignoreLinks=True),
         'blocks': children,
@@ -71,17 +83,18 @@ def processPage(page):
         item['title'] = renderMarkdown(title, ignoreLinks=True)
         item['text'] = renderMarkdown(item['text'], ignoreLinks=True)
 
-        #if item['uuid'] == uuid:
+        # if item['uuid'] == uuid:
         #    continue
 
         if item['link_to'] in references.keys():
             references[item['link_to']].append(item)
         else:
             references[item['link_to']] = [item]
-    
+
     _linksTo = []
 
     page_data[title] = template_data
+
 
 def renderPage(page, directory='./', template='template.html', filename='index.html'):
     templateHTML = env.get_template(template)
@@ -107,10 +120,11 @@ def renderPage(page, directory='./', template='template.html', filename='index.h
         f.write(outputHTML)
         f.close()
 
+
 def renderBullets(block):
     if 'children' not in block.keys():
         return ''
-    
+
     output = '<ul>'
     for child in block['children']:
         output += '<li>'
@@ -118,12 +132,13 @@ def renderBullets(block):
 
         if 'children' in child.keys():
             output += renderBullets(child)
-        
+
         output += '</li>'
-    
+
     output += '</ul>'
 
     return output
+
 
 def _processInternalLink(match, block):
     name = match.group(1)
@@ -134,26 +149,33 @@ def _processInternalLink(match, block):
     else:
         return '<a class="internal private" href="#">' + renderMarkdown(name) + '</a>'
 
+
 def renderMarkdown(text, ignoreLinks=False):
-    print(text)
+    # print(text)
 
     if ':hiccup' in text:
         # THIS DOES NOT WORK WELL !!! VERY BROKEN
+        # TODO render hiccup hr
         print(text)
-
+        # text = 'hr '
         data = re.sub(r'\n', '', text.strip())
+        print(data)
         data = re.sub(r'(\[\s*?):([\w-]+)', r'\1"\2",', data)
+        print(data)
         data = re.sub(r':([\w-]+)', r'"\1":', data)
+        print(data)
         data = re.sub(r'([\}\]\:][\s]*?)(\w+)([\s]*?[\[\{\]])', r'\1"\2"\3', data)
         data = re.sub(r'([\}\]\"])([\s\n]*?)([\[\{\"])', r'\1,\2\3', data)
-
         print(data[9:])
+        # data = re.sub(r'(hr)', r'hr', data)  # this tag is not being converted correctly
 
-        #print(data[10:])
-        #print(json.loads(data[10:]))
-        return convert(json.loads(data[9:]))
+        # print(data[9:])
 
-    if ignoreLinks == False:
+        # print(data[10:])
+        # print(json.loads(data[10:]))
+        return convert(text)
+
+    if ignoreLinks is False:
         global wordcount
         wordcount += len(text.split())
 
@@ -164,7 +186,7 @@ def renderMarkdown(text, ignoreLinks=False):
     else:
         text = re.sub(r'\[\[(.+?)\]\]', lambda x: _processInternalLink(x, text), text)
         text = re.sub(r'\[([^\[\]]+?)\]\((.+?)\)', r'<a class="external" href="\2" target="_blank">\1</a>', text)
-    
+
     text = re.sub(r'\n', r'<br>', text)
     text = re.sub(r'#(\[\[(.+?)\]\]|\w+)', r'<h2>\1</h2>', text)
     text = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', text)
@@ -176,10 +198,16 @@ def renderMarkdown(text, ignoreLinks=False):
 
     return text
 
-with open('azlen.json', 'r') as f:
+
+def removePrivateBlocks(page):
+    print(page)
+
+
+# load json backup
+with open('MattPublic.json', 'r') as f:
     data = json.loads(f.read())
 
-for page in data:
+for page in data:  # get page ids
     collectIDs(page)
 
 for page in data:
@@ -211,5 +239,5 @@ for page in data:
 
 # run through twice so that you can put jinja/html directly into Notion
 # perhaps this feature could be made optional
-#template = env.from_string(outputHTML)
-#outputHTML = template.render(**template_data)
+# template = env.from_string(outputHTML)
+# outputHTML = template.render(**template_data)

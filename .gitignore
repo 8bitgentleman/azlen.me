@@ -4,5 +4,15 @@ secret.py
 .cache.json
 cache/
 temp/
-notes/azlen.json
+notes/MattPublic.json
+notes/MattVogel.json
 notes/json_archive/
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
