@@ -7,6 +7,9 @@ temp/
 notes/MattPublic.json
 notes/MattVogel.json
 notes/json_archive/
+notes/public
+notes/ThemeTester.json
+notes/ThemeTester.md
 
 # Environments
 .env

@@ -9,7 +9,7 @@ import re
 from pyhiccup.core import convert
 import pprint
 from re import search
-
+from bs4 import BeautifulSoup
 pp = pprint.PrettyPrinter(indent=4)
 
 templateLoader = jinja2.FileSystemLoader(searchpath="./templates")
@@ -73,8 +73,12 @@ def processPage(page):
     children = []
     if 'children' in page.keys():
         for child in page['children']:
+            if 'heading' in child:
+                heading = child['heading']
+            else:
+                heading = False
             children.append({
-                'html': renderMarkdown(fix_encoding(child['string'])) + renderBullets(child)
+                'html': renderMarkdown(fix_encoding(child['string']), heading=heading) + renderBullets(child)
             })
 
     template_data = {
@@ -134,20 +138,46 @@ def renderBullets(block):
         return ''
 
     output = '<ul>'
+    soup = BeautifulSoup("<ul></ul>", features="html.parser")
+    new_li = soup.new_tag('li')
+    new_l = soup.new_tag('li')
+    # soup.ul.insert_after(new_li)
+    # soup.insert(0, new_li)
+    # soup.insert(0, new_l)
+    # print(soup)
     for child in block['children']:
         if child['uid'] in private_blocks:
             pass
         else:
             output += '<li>'
-            output += renderMarkdown(child['string'])
-
+            if 'heading' in child:
+                heading = child['heading']
+            else:
+                heading = False
+            output += renderMarkdown(child['string'], heading=heading)
+            new_li = soup.new_tag('li')
+            new_li.string = renderMarkdown(child['string'], heading=heading)
+            soup.ul.append(new_li)
+            # print(new_li)
+            # print(output)
             if 'children' in child.keys():
                 output += renderBullets(child)
-
+                # print(renderBullets(child))
             output += '</li>'
+            # if 'text-align' in child:
+            #     # soup = BeautifulSoup(output, features="html.parser")
+            #     # soup.find('li')['style'] = ''
+            #     # alignment = child['text-align']
+            #     # soup = BeautifulSoup(output, features="html.parser")
+            #     # soup.find('li')['style'] = child['text-align']
+            #     # output = str(soup)
+            #     # print(output)
+            # else:
+            #     alignment = False
 
     output += '</ul>'
-
+    # print(soup)
+    # print(output)
     return output
 
 
@@ -161,20 +191,27 @@ def _processInternalLink(match, block):
         return '<a class="internal private" href="#">' + renderMarkdown(name) + '</a>'
 
 
-def renderMarkdown(text, ignoreLinks=False):
-    # print(text)
+def _processInternalAlias(match, block):
+    name = match.group(1)
+    internal = match.group(2)
 
+    if internal in page_uuids:
+        uuid = page_uuids[internal]
+        _linksTo.append({'link_to': uuid, 'text': block})
+        return '<a class="internal" data-uuid="' + uuid + '" href="/' + uuid + '">' + renderMarkdown(name) + '</a>'
+    else:
+        return '<a class="internal private" href="#">' + renderMarkdown(name) + '</a>'
+
+
+def renderMarkdown(text, ignoreLinks=False, heading=False, alignment=False):
     if ':hiccup' in text:
         # THIS DOES NOT WORK WELL !!! VERY BROKEN
         # TODO render hiccup hr
         print(text)
         # text = 'hr '
         data = re.sub(r'\n', '', text.strip())
-        print(data)
         data = re.sub(r'(\[\s*?):([\w-]+)', r'\1"\2",', data)
-        print(data)
         data = re.sub(r':([\w-]+)', r'"\1":', data)
-        print(data)
         data = re.sub(r'([\}\]\:][\s]*?)(\w+)([\s]*?[\[\{\]])', r'\1"\2"\3', data)
         data = re.sub(r'([\}\]\"])([\s\n]*?)([\[\{\"])', r'\1,\2\3', data)
         print(data[9:])
@@ -190,22 +227,31 @@ def renderMarkdown(text, ignoreLinks=False):
         global wordcount
         wordcount += len(text.split())
 
-    text = re.sub(r'\!\[([^\[\]]*?)\]\((.+?)\)', r'<img src="\2" alt="1" />', text)
+    text = re.sub(r'{{\[\[TODO\]\]}}', r'<input type="checkbox" onclick="return false;">', text)  # unchecked TO DO
+    text = re.sub(r'{{\[\[DONE\]\]}}', r'<input type="checkbox" onclick="return false;" checked>', text)  # unchecked TO DO
+    text = re.sub(r'\!\[([^\[\]]*?)\]\((.+?)\)', r'<img src="\2" alt="1" />', text)  # markdown images
     if ignoreLinks:
-        text = re.sub(r'\[\[(.+?)\]\]', r'\1', text)
-        text = re.sub(r'\[([^\[\]]+?)\]\((.+?)\)', r'\1', text)
+        text = re.sub(r'\[\[(.+?)\]\]', r'\1', text)  # page links
+        text = re.sub(r'\[([^\[\]]+?)\]\((.+?)\)', r'\1', text)  # external links
     else:
-        text = re.sub(r'\[\[(.+?)\]\]', lambda x: _processInternalLink(x, text), text)
-        text = re.sub(r'\[([^\[\]]+?)\]\((.+?)\)', r'<a class="external" href="\2" target="_blank">\1</a>', text)
+        text = re.sub(r'\[([^\[\]]+?)\]\(([^\[\]].+?)\)', r'<a class="external" href="\2" target="_blank">\1</a>', text)  # external aliases
+        text = re.sub(r'\[([^\[\]]+?)\]\(\[\[(.+?)\]\]\)', lambda x: _processInternalAlias(x, text), text)  # internal aliases
 
-    text = re.sub(r'\n', r'<br>', text)
-    text = re.sub(r'#(\[\[(.+?)\]\]|\w+)', r'<h2>\1</h2>', text)
-    text = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', text)
-    text = re.sub(r'\_\_(.*?)\_\_', r'<em>\1</em>', text)
-    text = re.sub(r'\~\~(.+?)\~\~', r'<s>\1</s>', text)
-    text = re.sub(r'\^\^(.+?)\^\^', r'<span class="highlight">\1</span>', text)
-    text = re.sub(r'\`(.+?)\`', r'<code>\1</code>', text)
-    text = re.sub(r'\(\((.+?)\)\)', lambda x: renderMarkdown(block_ids[x.group(1)]['string'], ignoreLinks=True), text)
+        text = re.sub(r'\[\[(.+?)\]\]', lambda x: _processInternalLink(x, text), text)  # pages with brackets
+        text = re.sub(r'(?<=#)(\w+)', lambda x: _processInternalLink(x, text), text)  # tags without brackets
+
+    text = re.sub(r'\n', r'<br>', text)  # newline
+    text = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', text)  # bold
+    text = re.sub(r'\_\_(.*?)\_\_', r'<em>\1</em>', text)  # italic
+    text = re.sub(r'\~\~(.+?)\~\~', r'<s>\1</s>', text)  # strikethrough
+    text = re.sub(r'\^\^(.+?)\^\^', r'<span class="highlight">\1</span>', text)  # highlight
+    text = re.sub(r'\`\`\`(.+?)\`\`\`', r'<code>\1</code>', text)  # large codeblock
+    text = re.sub(r'\`(.+?)\`', r'<code>\1</code>', text)  # inline codeblock
+
+    text = re.sub(r'\(\((.+?)\)\)', lambda x: renderMarkdown(block_ids[x.group(1)]['string'], ignoreLinks=True), text)  # block ref
+    if heading:
+        # text = "<h{heading}>" + text + "</h{heading}>"
+        text = f'<h{heading}>{text}</h{heading}>'
 
     return text
 
