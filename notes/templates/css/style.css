@@ -73,7 +73,7 @@ body {
     overflow-x: auto !important;
     white-space: nowrap;
     padding: 0px 15px;
-    
+
 }
 .pinch-zoom {
     max-width: 100%;
@@ -275,7 +275,7 @@ iframe {
         display: inline-block;
         margin-right: 10px;
     }
-    
+
     .pinch-zoom-container {
         padding: 0;
     }
@@ -337,4 +337,198 @@ body.dark .backlinks .backlink-item.linked:hover {
 
 body.dark img {
     filter: invert() hue-rotate(180deg);
+}
+span.attribute {
+  font-weight: bold;
+  list-style: none;
+}
+
+
+/*                  */
+/* Custom data tags */
+/*                  */
+
+a[data-tag="tweet"] {
+    background: transparent;
+    color: #81D5ED !important;
+    padding: 3px 7px;
+    line-height: 2em;
+    font-weight: 700 !important;
+    border-radius: 4px;
+}
+a[data-tag="video"] {
+    background: #9769FF !important;
+    color: white !important;
+    padding: 3px 7px;
+    font-weight: 500;
+    border-radius: 4px;
+    line-height: 2em;
+}
+
+a[data-tag="quotes"], a[data-tag="quote"] {
+    background: #233ED9 !important;
+    color: white !important;
+    padding: 3px 7px;
+    font-weight: 500;
+    border-radius: 4px;
+    line-height: 2em;
+}
+
+a[data-tag="fav"] {
+  background: transparent !important;
+  color: #F44336 !important;
+}
+
+a[data-tag="fav"]:before {
+  background: transparent !important;
+    content: '★ '
+}
+
+a[data-tag="exercise"] {
+    background: #4FC460 !important;
+    color: white !important;
+    padding: 3px 7px;
+    font-weight: 700;
+    border-radius: 4px;
+    line-height: 2em;
+}
+a[data-tag="exercise"]:before {
+  content: '⚯ ';
+  background: #4FC460;
+  color: white;
+
+}
+
+a[data-tag="religion"] {
+  background: transparent !important;
+  color: #FF5047 !important;
+  padding: 3px 7px;
+  line-height: 2em;
+  font-weight: 700;
+  border-radius: 4px;
+}
+a[data-tag="newsletter"] {
+  background: #FC766F !important;
+  color: #fff !important;
+  padding: 3px 7px;
+  line-height: 2em;
+  font-weight: 700;
+  border-radius: 4px;
+}
+a[data-tag="Quick Capture"] {
+  background: transparent !important;
+  color: #4FC460 !important;
+
+}
+a[data-tag="Quick Capture"]:before {
+    content: '🖋 ';
+    color: transparent;
+    text-shadow: 0 0 0 #4FC460;
+
+}
+a[data-tag="idea bank"] {
+  background-color: transparent !important;
+  color: #FCB815 !important;
+  padding: 3px 4px;
+  font-weight: 700;
+  line-height: 1.4em;
+
+}
+a[data-tag="idea bank"]:before {
+   content: '✦ ';
+  /*-webkit-text-stroke: 1px black;*/
+}
+a[data-tag="campaign 1"]:before {
+   content: '⚑ ';
+   /*-webkit-text-stroke: 1px black;*/
+
+}
+a[data-tag="thoughts"]:before {
+    /* content: '🧠 ';*/
+    color: transparent !important;
+    text-shadow: 0 0 0 #37AC94;
+
+}
+
+a[data-tag="recipes"] {
+    color: #FF5722 !important;
+    background-color: transparent !important;
+    padding: 3px 4px;
+    font-weight: 500;
+    line-height: 1.4em;
+    /* border: 2px solid #FF5722 !important; */
+
+}
+a[data-tag="recipes"]:before {
+    content: '🌶 ';
+    color: transparent;
+    text-shadow: 0 0 0 #FF5722 !important;
+    /* text-shadow: 0 0 0 rgb(var(--text-color), 1) !important; */
+}
+
+a[data-tag="personal"] {
+    background-color: #616161 !important;
+    color:#F5F5F5 !important;
+  	padding: 3px 7px;
+    font-weight: 500;
+    border-radius: 4px;
+    line-height: 2em;
+}
+
+a[data-tag="awe"] {
+    color: rgb(var(--color-primary)) !important;
+    background-color: transparent !important;
+    padding: 3px 4px;
+    font-weight: 700;
+    line-height: 1.4em;
+}
+
+a[data-tag="conversations"]:before {
+    content: '💬 ';
+    color: transparent;
+    text-shadow: 0 0 0 var(--color-primary-contrast)  !important;
+}
+
+a[data-tag='seedlings'], span[data-link-title^='seedlings'] .rm-page-ref  {
+
+  color: #0DC670 !important;
+  background-color: transparent !important;
+  padding: 3px 3px;
+  font-weight: 600;
+  line-height: 1.4em;
+
+}
+a[data-tag="seedlings"]:before {
+    content: '🌱';
+}
+
+a[data-tag='budding'], span[data-link-title^='budding'] .rm-page-ref  {
+
+  color: #0B9351 !important;
+  background-color: transparent !important;
+  padding: 3px 3px;
+  font-weight: 600;
+  line-height: 1.4em;
+
+}
+a[data-tag="budding"]:before {
+    content: '🌿';
+}
+
+
+a[data-tag='evergreen'], span[data-link-title^='evergreen'] .rm-page-ref {
+
+  background: #0DC670 !important;
+  color: #fff !important;
+  padding: 3px 8px;
+  line-height: 2em;
+  font-weight: 500;
+
+}
+a[data-tag="evergreen"]:before {
+  content: '🌲';
+  text-shadow: 0 0 3px white;
+  position: relative;
+  /* color: transparent;
+  text-shadow: 0 0 0 #FF5722 !important;*/
 }
