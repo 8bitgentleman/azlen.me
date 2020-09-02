@@ -214,7 +214,6 @@ def _processInternalTag(match, block):
     '''
     link = match.group(1)
     name = match.group(2)
-
     # todo include # in text to allow for tag css targeting
     if name in page_uuids:
         uuid = page_uuids[name]
@@ -257,6 +256,7 @@ def _findChildParent(blockID):
             # some super hacky stuff to get the index of the page that the blockID is on
             s = {"[", "]"}
             parent = int(fullPath.split(".")[0].strip("[").strip("]"))
+            string = m.context.value["string"]
             # print("parent title is " + data[parent]['title'])
             # print("block id is " + m.value)
             # search to see if the parent is a private page
@@ -264,7 +264,7 @@ def _findChildParent(blockID):
                 private = False
             else:
                 private = True
-            return page_uuids[data[parent]['title']], private
+            return page_uuids[data[parent]['title']], private, string
         else:
             pass
 
@@ -282,18 +282,16 @@ def _processInternalBlockAlias(match, block):
     try:
         if not private:
             # print("not private internal block alias")
-            return('<a class="internal-block" data-uuid="' + parentUID + '" href="/' + parentUID + '">' + name + '</a>')
+            return('<a class="internal-block" data-uuid="' + parentUID + '" href="/' + parentUID + '#' + internalBlock + '">' + name + '</a>')
         else:
             # print('private internal block alias')
-            # print('<a class="internal-block private" data-uuid="' + parentUID + '" href="/' + parentUID + '">' + name + '</a>')
             return ('<a class="internal-block private" data-uuid="' + parentUID + '" href="/' + parentUID + '">' + name + '</a>')
     except Exception as e:
         print(name)
         print(parentUID)
         print(e)
         print("---")
-
-    return '<a class="internal-block" data-uuid="' + parentUID + '" href="/' + parentUID + '">' + name + '</a>'
+    return '<a class="internal-block" data-uuid="' + parentUID + '" href="/' + parentUID + '#' + internalBlock + '">' + name + '</a>'
 
 
 def _processInternalEmbed(match, block):
@@ -305,17 +303,15 @@ def _processInternalEmbed(match, block):
     name = renderMarkdown(match.group(1))
     blockID = match.group(2)
 
-    with open(jsonFile, 'r') as f:
-        data = json.loads(f.read())
+    parent = _findChildParent(blockID)
 
-    # find all blocks with UIDs
-    jsonpath_expression = parse("$..uid")
+    parentUID = parent[0]
+    private = parent[1]
+    string = parent[2]
 
-    match = jsonpath_expression.find(data)
-    for m in match:
-        # target block with correct UID
-        if m.value == blockID:
-            return renderMarkdown(m.context.value['string'])
+    # todo there's no error handling here, what if the embed it from a private page?
+    # return f'<span class="internal embed">{renderMarkdown(m.context.value["string"])}</span>'
+    return f'<a class="internal embed" href="/{parentUID}#{blockID}">{renderMarkdown(string)}</a>'
 
 
 def _processExternalEmbed(match, block, type):
@@ -335,6 +331,18 @@ def _processAttribute(match, block):
     '''
     name = renderMarkdown(match.group(1))
     return f'<span class="attribute">{name}::</span>'
+
+
+def _processTextVersion(match, block):
+    text = renderMarkdown(match.group(2))
+    textOptions = text.split("|")
+    options = ''
+    for o in textOptions:
+        option = f'<option value="{o}">{o}</option>'
+        options += option
+    select = f'<select>{options}</select>'
+    print(select)
+    return select
 
 
 def renderMarkdown(text, ignoreLinks=False, heading=False, alignment=False):
@@ -365,9 +373,12 @@ def renderMarkdown(text, ignoreLinks=False, heading=False, alignment=False):
     text = re.sub(r'{{\[\[TODO\]\]}}', r'<input type="checkbox" onclick="return false;">', text)  # unchecked TO DO
     text = re.sub(r'{{{\[\[DONE\]\]}}}}', r'<input type="checkbox" onclick="return false;" checked>', text)  # checked TO DO alt
     text = re.sub(r'{{\[\[DONE\]\]}}', r'<input type="checkbox" onclick="return false;" checked>', text)  # checked TO DO
-    text = re.sub(r'\!\[([^\[\]]*?)\]\((.+?)\)', r'<img src="\2" alt="1" />', text)  # markdown images
+    text = re.sub(r'\!\[([^\[\]]*?)\]\((.+?)\)', r'<img src="\2" alt="\1" />', text)  # markdown images
     text = re.sub(r'\{\{\[\[youtube\]\]:(.+?)\}\}', lambda x: _processExternalEmbed(x, text, "youtube"), text)  # external clojure embeds
     text = re.sub(r'\{\{(.*):.*[^\{\}]\((.+?)\)\).*\}\}', lambda x: _processInternalEmbed(x, text), text)  # clojure embeds and aliases \{\{(.*):.*([^\{\}]\(.+?\)\)).*\}\}
+    # todo create dropdown for text versioning
+    # text = re.sub(r'(\{\{or:(.+?)\|.+?\}\})', r'<span class="inline-option">\2</span>', text)  # text versioning
+    text = re.sub(r'(\{\{or:(.+?)\}\})', lambda x: _processTextVersion(x, text), text)  # text versioning
 
     if ignoreLinks:
         text = re.sub(r'\[\[(.+?)\]\]', r'\1', text)  # page links
@@ -375,8 +386,9 @@ def renderMarkdown(text, ignoreLinks=False, heading=False, alignment=False):
     else:
         text = re.sub(r'\[([^\[\]]+?)\]\(\[\[(.+?)\]\]\)', lambda x: _processInternalAlias(x, text), text)  # internal page aliases
         text = re.sub(r'\[([^\[\]]+?)\]\(\(\((.+?)\)\)\)', lambda x: _processInternalBlockAlias(x, text), text)  # internal block aliases
-        text = re.sub(r'\[([^\[\]]+?)\]\(([^\[\]\(].+?)\)', r'<a class="external" href="\2" target="_blank">\1</a>', text)  # external aliases
-        text = re.sub(r'(#(\w+))', lambda x: _processInternalTag(x, text), text)  # tags without brackets
+        text = re.sub(r'\[([^\[\]]+?)\]\(([^\[\]\(].+?)\)', r'<a class="external" href="/2" target="_blank">\1</a>', text)  # external aliases
+        text = re.sub(r'(?<!href="\/[A-Za-z0-9\-\_]{8})(#(\w+))', lambda x: _processInternalTag(x, text), text)  # tags without brackets
+
         text = re.sub(r'(\#\[\[(.+?)\]\])', lambda x: _processInternalTag(x, text), text)  # tag with brackets
         text = re.sub(r'(?<!\#)\[\[(.+?)\]\]', lambda x: _processInternalLink(x, text), text)  # pages with brackets
 
@@ -409,7 +421,7 @@ def renderMarkdown(text, ignoreLinks=False, heading=False, alignment=False):
 
 
 # load json backup
-jsonFile = 'MattVogel.json'
+jsonFile = 'Theme Tester.json'
 
 with open(jsonFile, 'r') as f:
     data = json.loads(f.read())
