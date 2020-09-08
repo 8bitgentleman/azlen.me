@@ -22,3 +22,4 @@ venv.bak/
 notes/Theme Tester.json
 notes/Theme Tester.md
 notes/templates/css/FreightSans W03.woff2
+*.json

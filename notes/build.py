@@ -274,24 +274,27 @@ def _processInternalBlockAlias(match, block):
     name = renderMarkdown(match.group(1))
     internalBlock = match.group(2)
     parent = _findChildParent(internalBlock)
-
-    parentUID = parent[0]
-    private = parent[1]
-    # todo bad block links cause this process to fail. Fix this ^^__Quick link to__→ [Conversations:](
-    # todo fix block anchoring
     try:
-        if not private:
-            # print("not private internal block alias")
-            return('<a class="internal-block" data-uuid="' + parentUID + '" href="/' + parentUID + '#' + internalBlock + '">' + name + '</a>')
-        else:
-            # print('private internal block alias')
-            return ('<a class="internal-block private" data-uuid="' + parentUID + '" href="/' + parentUID + '">' + name + '</a>')
-    except Exception as e:
-        print(name)
-        print(parentUID)
-        print(e)
-        print("---")
-    return '<a class="internal-block" data-uuid="' + parentUID + '" href="/' + parentUID + '#' + internalBlock + '">' + name + '</a>'
+        parentUID = parent[0]
+        private = parent[1]
+        # todo bad block links cause this process to fail. Fix this ^^__Quick link to__→ [Conversations:](
+        # todo fix block anchoring
+        try:
+            if not private:
+                # print("not private internal block alias")
+                return('<a class="internal-block" data-uuid="' + parentUID + '" href="/' + parentUID + '#' + internalBlock + '">' + name + '</a>')
+            else:
+                # print('private internal block alias')
+                return ('<a class="internal-block private" data-uuid="' + parentUID + '" href="/' + parentUID + '">' + name + '</a>')
+        except Exception as e:
+            print(name)
+            print(parentUID)
+            print(e)
+            print("---")
+        return '<a class="internal-block" data-uuid="' + parentUID + '" href="/' + parentUID + '#' + internalBlock + '">' + name + '</a>'
+    except TypeError:
+        # print('private internal block alias')
+        return f'<a class="internal-block private" >{name}</a>'
 
 
 def _processInternalEmbed(match, block):
@@ -304,14 +307,16 @@ def _processInternalEmbed(match, block):
     blockID = match.group(2)
 
     parent = _findChildParent(blockID)
+    try:
+        parentUID = parent[0]
+        private = parent[1]
+        string = parent[2]
 
-    parentUID = parent[0]
-    private = parent[1]
-    string = parent[2]
-
-    # todo there's no error handling here, what if the embed it from a private page?
-    # return f'<span class="internal embed">{renderMarkdown(m.context.value["string"])}</span>'
-    return f'<a class="internal embed" href="/{parentUID}#{blockID}">{renderMarkdown(string)}</a>'
+        # todo there's no error handling here, what if the embed it from a private page?
+        # return f'<span class="internal embed">{renderMarkdown(m.context.value["string"])}</span>'
+        return f'<a class="internal embed" href="/{parentUID}#{blockID}">{renderMarkdown(string)}</a>'
+    except TypeError:
+        return f'<a class="internal embed private" href="">{blockID}</a>'
 
 
 def _processExternalEmbed(match, block, type):
@@ -421,7 +426,7 @@ def renderMarkdown(text, ignoreLinks=False, heading=False, alignment=False):
 
 
 # load json backup
-jsonFile = 'Theme Tester.json'
+jsonFile = 'MattVogel.json'
 
 with open(jsonFile, 'r') as f:
     data = json.loads(f.read())
