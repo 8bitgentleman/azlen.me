@@ -95,7 +95,7 @@ def processPage(page):
             children.append({
                 'html': renderMarkdown(fix_encoding(child['string']), heading=heading, alignment=alignment) + renderBullets(child)
             })
-    print(last_edited)
+
     template_data = {
         'title': renderMarkdown(title, ignoreLinks=True),
         'blocks': children,
@@ -126,12 +126,10 @@ def processPage(page):
 
 def renderPage(page, directory='./', template='template.html', filename='index.html'):
     templateHTML = env.get_template(template)
-
     if page['title'] not in page_data:
         return
 
     template_data = page_data[page['title']]
-
     template_data['website_wordcount'] = wordcount
     template_data['website_pages'] = len(page_names)
 
@@ -465,7 +463,28 @@ for file_name in src_files:
     elif os.path.isdir(full_file_name):
         shutil.copytree(full_file_name, os.path.join('./public', file_name))
 
+
+def _checkNamespace(page):
+    '''checks for namespaces with specific templates'''
+
+    namespace_split = page['title'].split("/")
+    if len(namespace_split) > 1:
+        if namespace_split[0] == 'Book':
+            template = namespace_split[0].lower() + '_template.html'
+            # print(template)
+            return template
+    else:
+        return False
+
+
 for page in data:
+    template_name = 'template.html'
+    namespace_template = _checkNamespace(page)
+    if namespace_template:
+        template_name = namespace_template
+    # TODO create new templates
+    # TODO use correct template
+    # TODO figure out how templating works
     renderPage(page, './public', template='template.html')
     renderPage(page, './public', template='embed.html', filename='embed.html')
     renderPage(page, './public', template='page.html', filename='page.html')

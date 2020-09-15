@@ -10,7 +10,7 @@ notes/json_archive/
 notes/public
 notes/ThemeTester.json
 notes/ThemeTester.md
-
+research/
 # Environments
 .env
 .venv
