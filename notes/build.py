@@ -35,12 +35,12 @@ def collectIDs(page):
     '''Collects page names and UUIDs'''
     pagestring = json.dumps(page)
 
-    # only remove page if private tag in page attributess
+    # only remove/skip page if private tag in page attributess
     personalSearch = search(".*Tags::.*#personal.*", pagestring)
     if personalSearch is not None:
         print('Private page: [[' + page['title'] + ']]')
         return
-
+    # generate UUID for page name
     uuid = shortuuid.uuid(name=page['title'])[:8]
     collectChildIDs(page)
 
@@ -61,20 +61,29 @@ def collectChildIDs(object):
                 private_blocks[child['uid']] = child
                 collectChildIDs(child)
             else:
+
                 block_ids[child['uid']] = child
+
                 collectChildIDs(child)
 
 
 def processPage(page):
     title = page['title']
+    last_edited = page['edit-time']
     if title not in page_uuids:
         return
-    # print(title)
     uuid = page_uuids[title]
 
     children = []
     if 'children' in page.keys():
         for child in page['children']:
+            # find the last time the page was edited
+            try:
+                if child['edit-time'] > last_edited:
+                    last_edited = child['edit-time']
+            except KeyError:
+                if child['create-time'] > last_edited:
+                    last_edited = child['create-time']
             if 'heading' in child:
                 heading = child['heading']
             else:
@@ -86,10 +95,12 @@ def processPage(page):
             children.append({
                 'html': renderMarkdown(fix_encoding(child['string']), heading=heading, alignment=alignment) + renderBullets(child)
             })
+    print(last_edited)
     template_data = {
         'title': renderMarkdown(title, ignoreLinks=True),
         'blocks': children,
         'uuid': uuid,
+        'last_edited': last_edited,
         'references': []
     }
 
@@ -130,9 +141,9 @@ def renderPage(page, directory='./', template='template.html', filename='index.h
         template_data['references'] = references[uuid]
 
     outputHTML = templateHTML.render(**template_data)
-
+    # create the file directory for the page
     os.makedirs(os.path.join(directory, template_data['uuid']), exist_ok=True)
-
+    # save the rendered html page
     with open(os.path.join(directory, template_data['uuid'], filename), 'w') as f:
         f.write(outputHTML)
         f.close()
@@ -277,7 +288,7 @@ def _processInternalBlockAlias(match, block):
     try:
         parentUID = parent[0]
         private = parent[1]
-        # todo bad block links cause this process to fail. Fix this ^^__Quick link to__→ [Conversations:](
+        # todo bad block links cause this process to fail. Fix this ^^__Quick link to__ [Conversations:](
         # todo fix block anchoring
         try:
             if not private:
@@ -339,6 +350,7 @@ def _processAttribute(match, block):
 
 
 def _processTextVersion(match, block):
+    '''Processes in-line text versioning that looks like this {{or: first choice|second choice}}'''
     text = renderMarkdown(match.group(2))
     textOptions = text.split("|")
     options = ''
@@ -346,7 +358,6 @@ def _processTextVersion(match, block):
         option = f'<option value="{o}">{o}</option>'
         options += option
     select = f'<select>{options}</select>'
-    print(select)
     return select
 
 
@@ -426,20 +437,18 @@ def renderMarkdown(text, ignoreLinks=False, heading=False, alignment=False):
 
 
 # load json backup
-jsonFile = 'MattVogel.json'
-
+jsonFile = 'Theme Tester.json'
+# read database json
 with open(jsonFile, 'r') as f:
     data = json.loads(f.read())
 for page in data:  # get page ids
     collectIDs(page)
 
-# pp.pprint(list(private_blocks.keys()))
-
 for page in data:
     processPage(page)
 
 pagecount = len(page_data.keys())
-
+# remove all files in public folder. these will be regenerated later
 files = glob.glob('./public/*')
 for f in files:
     if os.path.isdir(f):

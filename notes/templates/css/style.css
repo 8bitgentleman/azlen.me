@@ -1,5 +1,5 @@
 /* <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Open+Sans:100&amp;lang=en" /> */
-<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300&display=swap" rel="stylesheet">
+/* <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300&display=swap" rel="stylesheet"> */
 :root {
     --background-color: #EEEEEE;
     --
@@ -133,7 +133,7 @@ a:hover {
 
 a.internal.tag {
     color: #FFFFFF;
-    background-color: rgb(var(--color-link));
+    background-color: rgb(var(--color-link), 1);
     padding: 1px 6px;
     border-radius: 4px;
     white-space: nowrap;
@@ -193,7 +193,7 @@ a.internal.embed:hover {
 /* ------------ */
 
 a.internal {
-    color: rgb(var(--color-link));
+    color: rgb(var(--color-link), 1);
     text-decoration: none;
     /* line-height: 1; */
     position: relative;
@@ -224,7 +224,7 @@ a.internal.linked:hover {
 a.internal.linked:visited {
   text-decoration: none;
   position: relative;
-  color: rgb(var(--color-link));
+  color: rgb(var(--color-link), 1);
 }
 a.internal.linked:after, a.internal.linked:visited:after {
   content: '';
@@ -233,7 +233,7 @@ a.internal.linked:after, a.internal.linked:visited:after {
   bottom: 0;
   left: 0;
   width: 0%;
-  background: rgb(var(--color-link));
+  background: rgb(var(--color-link), 1);
   transition: 0.2s;
 }
 a.internal.linked:hover:after, a.internal.linked:visited:hover:after {
