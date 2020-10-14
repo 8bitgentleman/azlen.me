@@ -123,6 +123,9 @@ def processPage(page):
         item['link_from'] = uuid
         item['title'] = renderMarkdown(title, ignoreLinks=True)
         item['text'] = renderMarkdown(item['text'], ignoreLinks=True)
+        print(item['text'])
+        # item['text'] = item['text']
+        print(item['text'])
 
         # if item['uuid'] == uuid:
         #    continue
@@ -395,7 +398,7 @@ def renderMarkdown(text, ignoreLinks=False, heading=False, alignment=False):
         wordcount += len(text.split())
     # todo correctly render page alias {{alias: [[Roam Research]] Roam}}
     # todo fix URLs that contain a #
-    text = re.sub(r'\b(.+)\:\:', lambda x: _processAttribute(x, text), text)  # attributes
+    # text = re.sub(r'\b(.+)\:\:', lambda x: _processAttribute(x, text), text)  # attributes
     text = re.sub(r'{{\[\[TODO\]\]}}', r'<input type="checkbox" onclick="return false;">', text)  # unchecked TO DO
     text = re.sub(r'{{{\[\[DONE\]\]}}}}', r'<input type="checkbox" onclick="return false;" checked>', text)  # checked TO DO alt
     text = re.sub(r'{{\[\[DONE\]\]}}', r'<input type="checkbox" onclick="return false;" checked>', text)  # checked TO DO
@@ -409,6 +412,8 @@ def renderMarkdown(text, ignoreLinks=False, heading=False, alignment=False):
     if ignoreLinks:
         text = re.sub(r'\[\[(.+?)\]\]', r'\1', text)  # page links
         text = re.sub(r'\[([^\[\]]+?)\]\((.+?)\)', r'\1', text)  # external links
+        text = re.sub(r'\b(.+)\:\:', lambda x: _processAttribute(x, text), text)  # attributes
+
     else:
         text = re.sub(r'\[([^\[\]]+?)\]\(\[\[(.+?)\]\]\)', lambda x: _processInternalAlias(x, text), text)  # internal page aliases
         text = re.sub(r'\[([^\[\]]+?)\]\(\(\((.+?)\)\)\)', lambda x: _processInternalBlockAlias(x, text), text)  # internal block aliases
