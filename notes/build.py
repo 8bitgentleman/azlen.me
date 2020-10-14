@@ -29,6 +29,7 @@ _linksTo = []
 
 page_data = {}
 private_blocks = {}
+hiddenTags = ['#personal', '#agenda', '#EntryPoint']
 
 
 def collectIDs(page):
@@ -38,7 +39,7 @@ def collectIDs(page):
     # only remove/skip page if private tag in page attributess
     personalSearch = search(".*Tags::.*#personal.*", pagestring)
     if personalSearch is not None:
-        print('Private page: [[' + page['title'] + ']]')
+        # print('Private page: [[' + page['title'] + ']]')
         return
     # generate UUID for page name
     uuid = shortuuid.uuid(name=page['title'])[:8]
@@ -52,18 +53,20 @@ def collectChildIDs(object):
     '''Collects block children names and UUIDs'''
     if 'children' in object.keys():
         for child in object['children']:
-            # block_ids[child['uid']] = child
             # only remove block if private tag in block
-            # todo remove Agenda blocks
-            personalSearch = search(".*#personal.*", child['string'])
+            # todo is this necessary?
+            for tag in hiddenTags:
+                result = search(".*" + tag + ".*", child['string'])
+                personalSearch = None
+                if result is not None:
+                    personalSearch = True
+                    break
+
             if personalSearch is not None:
-                print('Private block: "' + child['string'] + '"')
                 private_blocks[child['uid']] = child
                 collectChildIDs(child)
             else:
-
                 block_ids[child['uid']] = child
-
                 collectChildIDs(child)
 
 
@@ -92,10 +95,20 @@ def processPage(page):
                 alignment = child['text-align']
             else:
                 alignment = False
-            children.append({
-                'html': renderMarkdown(fix_encoding(child['string']), heading=heading, alignment=alignment) + renderBullets(child)
-            })
+            # check for private parent blocks and remove block if necessary
+            for tag in hiddenTags:
+                result = search(".*" + tag + ".*", child['string'])
+                personalSearch = None
+                if result is not None:
+                    personalSearch = True
+                    break
 
+            if personalSearch is not None:
+                pass
+            else:
+                children.append({
+                    'html': renderMarkdown(fix_encoding(child['string']), heading=heading, alignment=alignment) + renderBullets(child)
+                })
     template_data = {
         'title': renderMarkdown(title, ignoreLinks=True),
         'blocks': children,
@@ -132,7 +145,6 @@ def renderPage(page, directory='./', template='template.html', filename='index.h
     template_data = page_data[page['title']]
     template_data['website_wordcount'] = wordcount
     template_data['website_pages'] = len(page_names)
-
     uuid = template_data['uuid']
 
     if uuid in references:
@@ -151,6 +163,7 @@ def renderBullets(block):
     # todo rework this to use beautiful soup
     if 'children' not in block.keys():
         return ''
+
     output = '<ul id="%s">' % (block['uid'])  # add blockid to div to allow for anchor linking
     # soup = BeautifulSoup("<ul></ul>", features="html.parser")
     # new_li = soup.new_tag('li')
@@ -180,7 +193,6 @@ def renderBullets(block):
 
             if 'children' in child.keys():
                 output += renderBullets(child)
-                # print(renderBullets(child))
             output += '</li>'
             # if 'text-align' in child:
             #     # soup = BeautifulSoup(output, features="html.parser")
@@ -194,7 +206,6 @@ def renderBullets(block):
             #     alignment = False
 
     output += '</ul>'
-    # print(soup)
     return output
 
 
@@ -343,6 +354,7 @@ def _processAttribute(match, block):
         Processes attributes that look like this
         Attribute::
     '''
+    # TODO save attributes for specific templates
     name = renderMarkdown(match.group(1))
     return f'<span class="attribute">{name}::</span>'
 
@@ -435,7 +447,7 @@ def renderMarkdown(text, ignoreLinks=False, heading=False, alignment=False):
 
 
 # load json backup
-jsonFile = 'Theme Tester.json'
+jsonFile = 'MattPublic.json'
 # read database json
 with open(jsonFile, 'r') as f:
     data = json.loads(f.read())
@@ -488,6 +500,11 @@ for page in data:
     renderPage(page, './public', template='template.html')
     renderPage(page, './public', template='embed.html', filename='embed.html')
     renderPage(page, './public', template='page.html', filename='page.html')
+    try:
+        template_data = page_data[page['title']]
+        # print(len(template_data["references"]))
+    except Exception:
+        pass
 
 
 # run through twice so that you can put jinja/html directly into Notion

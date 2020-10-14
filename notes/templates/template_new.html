@@ -1,80 +1,121 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <title>{{ title }}</title>
-
-    <!-- META TAGS -->
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-
-    <meta property="og:title" content="{{ title }}">
-    <meta property="og:description" content="">
-    <meta property="og:image" content="https://azlen.me/og-image.png">
-    <!--<meta name="twitter:card" content="summary_large_image">-->
-    <meta name="twitter:card" content="summary">
-    <meta name="twitter:image" content="https://azlen.me/twitter-image-light.png">
-    <meta name="twitter:site" content="@azlenelza">
-    <meta name="twitter:creator" content="@azlenelza">
-    <!--<meta property="og:url" content="">-->
-
-    <!-- FAVICON -->
-    <link rel="apple-touch-icon" sizes="57x57" href="/favicon/apple-icon-57x57.png">
-    <link rel="apple-touch-icon" sizes="60x60" href="/favicon/apple-icon-60x60.png">
-    <link rel="apple-touch-icon" sizes="72x72" href="/favicon/apple-icon-72x72.png">
-    <link rel="apple-touch-icon" sizes="76x76" href="/favicon/apple-icon-76x76.png">
-    <link rel="apple-touch-icon" sizes="114x114" href="/favicon/apple-icon-114x114.png">
-    <link rel="apple-touch-icon" sizes="120x120" href="/favicon/apple-icon-120x120.png">
-    <link rel="apple-touch-icon" sizes="144x144" href="/favicon/apple-icon-144x144.png">
-    <link rel="apple-touch-icon" sizes="152x152" href="/favicon/apple-icon-152x152.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-icon-180x180.png">
-
-    <link rel="manifest" href="/favicon/manifest.json">
-    <meta name="msapplication-TileColor" content="#EEEBE8">
-    <meta name="msapplication-TileImage" content="/ms-icon-144x144.png">
-    <meta name="theme-color" content="#EEEBE8">
-
-    <link rel="icon" type="image/png" sizes="192x192"  href="/favicon/android-icon-192x192.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="96x96" href="/favicon/favicon-96x96.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16x16.png">
-
-    <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;700&display=swap" rel="stylesheet">
-    <link href="https://unpkg.com/tippy.js@6.2.3/themes/light.css" rel="stylesheet">
+	<head>
+		<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;700&display=swap" rel="stylesheet">
+		<link href="https://unpkg.com/tippy.js@6.2.3/themes/light.css" rel="stylesheet">
 		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <style>
-        {% include 'css/style.css' %}
-    </style>
+		<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
 
-    <script>
-        {% include 'js/pinch-zoom.min.js' %}
-    </script>
-    <script src="https://unpkg.com/@popperjs/core@2"></script>
-    <script src="https://unpkg.com/tippy.js@6"></script>
-</head>
-<body>
-    <header id="header">
-        <a href="/" id="logo">
-            <svg width="168" height="168" viewBox="0 0 168 168" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M109 34C109 27.3696 111.634 21.0107 116.322 16.3223C121.011 11.6339 127.37 9 134 9C140.63 9 146.989 11.6339 151.678 16.3223C156.366 21.0107 159 27.3696 159 34C159 40.6304 156.366 46.9893 151.678 51.6777C146.989 56.3661 140.63 59 134 59C127.37 59 121.011 56.3661 116.322 51.6777C111.634 46.9893 109 40.6304 109 34Z" stroke="black" stroke-width="18" stroke-linecap="square"></path>
-                <path d="M16.3223 116.322C11.6339 121.011 9 127.37 9 134C9 140.63 11.6339 146.989 16.3223 151.678C21.0107 156.366 27.3696 159 34 159C40.6304 159 46.9893 156.366 51.6777 151.678C56.3661 146.989 59 140.63 59 134C59 127.37 56.3661 121.011 51.6777 116.322C46.9893 111.634 40.6304 109 34 109C27.3696 109 21.0107 111.634 16.3223 116.322Z" stroke="black" stroke-width="18" stroke-linecap="square"></path>
-                <path d="M9 54C9 52.4471 9 49.786 9 46.5086C9 25.7979 25.7893 9.00001 46.5 9.00002V9.00002C67.2107 9.00004 84 25.7894 84 46.5V121.5C84 142.211 100.789 159 121.5 159V159C142.211 159 159 142.202 159 121.491C159 118.214 159 115.553 159 114" stroke="black" stroke-width="18" stroke-linecap="square"></path>
-            </svg>
-        </a>
-        <label class="dark-mode-toggle" aria-label="Activate dark mode" title="Activate dark mode" onclick="toggleDarkMode()">
-            <input type="checkbox" checked="" />
-						<i onclick="myFunction(this)" class="fa fa-sun"></i>
 
-            <div></div>
-        </label>
-    </header>
-        <div class="pinch-zoom">
-            {% include 'page.html' %}
+		<style>
+			@font-face {
+				font-family: 'Questrial Regular';
+				src: url('/notes/templates/css/Questrial-Regular.woff2') format('woff2');
+			}
+			@font-face {
+				font-family: 'Domine Medium';
+				src: url('/notes/templates/css/Domine-Medium.woff2') format('woff2');
+			}
+
+			html, body {
+/*				flex-direction: column;*/
+
+				padding: 0;
+				margin: 0;
+				background: #f5eded;
+				font-family: 'Questrial', sans-serif;
+
+				width: 100%;
+				height: 100%;
+
+				font-size: 1.07em;
+				line-height: 1.8em;
+				color:#334259;
+			}
+			
+			html {
+				overflow: scroll;
+				overflow-x: hidden;
+			}
+			::-webkit-scrollbar {
+					width: 0px;  /* Remove scrollbar space */
+					background: transparent;  /* Optional: just make scrollbar invisible */
+			}
+			
+			#header{
+				flex: 0 0 1;
+				background: #FFFFFF;
+				border-style: solid;
+				border-color: #DDDDDD;
+				border-width: 0px;
+        border-right-width: 0;
+        border-bottom-width: 1px;
+        padding: 10px 30px;
+				font-size: 36px;  
+				z-index: 5;
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+			}
+			#header div{
+				font-weight: bold;
+
+			}
+			#header > * {
+					display: inline-block;
+					margin-right: 10px;
+			}
+			.nav{
+				font-size: 20px;  
+				float:left !important;
+/*				display: flex;*/
+
+			}
+			i.nav-button{
+/*				float:right;*/
+				position:relative;
+    		top: calc(50% - 10px); /* 50% - 3/4 of icon height */
+				right: 0px;
+			}
+        .pinch-zoom {
+            flex: 1;
+            /*position: inherit !important;*/
+            height: 100%;
+            overflow-x: auto !important;
+            white-space: nowrap;
+            padding: 0px 30px;
+
+        }
+        .pinch-zoom {
+            max-width: 100%;
+        }
+		</style>
+		
+	</head>
+	<body>
+		<header id="header">
+			<div>Digital Roof Garden</div>
+			<div class="nav">
+<!--				<a href="/"> ABOUT</a>-->
+			</div>
+			<div class="controls">
+				<i class="nav-button material-icons">wb_sunny</i>
+				<i class="nav-button material-icons">brightness_2</i>
+			</div>
+
+		</header>
+		
+		<div class="pinch-zoom">
+		  <div class=page-info>
+          <h1 class="page-title">Theme Tester</h1>
+          <span class="page-footer">
+              <a class="internal tag" data-tag="test" data-uuid="FWWdRjfX" href="/FWWdRjfX">#test</a>
+              <a class="internal tag" data-tag="test" data-uuid="FWWdRjfX" href="/FWWdRjfX">#test</a>
+          </span>
         </div>
-
-
-    <script>
+      {% include 'page.html' %}
+		</div>
+		<script>
         let pages = ["{{ uuid }}"]
 
         let switchDirectionWindowWidth = 900
@@ -330,5 +371,5 @@
             });
         }*/
     </script>
-</body>
+	</body>
 </html>

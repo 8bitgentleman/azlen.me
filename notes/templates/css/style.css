@@ -2,36 +2,45 @@
 /* <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300&display=swap" rel="stylesheet"> */
 :root {
     --background-color: #EEEEEE;
-    --
     --page-background: #212121;
     --text-color: #ededed;
     --color-alpha: #50a8d8;
     --color-embed: 255, 152, 0;
     --color-link: 73, 197, 91
 }
-/*
-@media (prefers-color-scheme: dark) {
-	:root {
-		--background-color: #111;
-		--page-background: #212121;
-		--text-color: #ededed;
-		--color-alpha: #50a8d8;
-	}
-}*/
+
 @font-face {
   font-family: 'FreightSans W03';
   src: url('/notes/templates/css/FreightSans W03.woff2') format('woff2');
 }
+@font-face {
+  font-family: 'Questrial Regular';
+  src: url('/notes/templates/css/Questrial-Regular.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Domine Medium';
+  src: url('/notes/templates/css/Domine-Medium.woff2') format('woff2');
+}
+html {
+    overflow: scroll;
+    overflow-x: hidden;
+}
+::-webkit-scrollbar {
+    width: 0px;  /* Remove scrollbar space */
+    background: transparent;  /* Optional: just make scrollbar invisible */
+}
+/* Optional: show position indicator in red */
+/*
+::-webkit-scrollbar-thumb {
+    background: #FF0000;
+}
+*/
 
 html, body {
     padding: 0;
     margin: 0;
     background: #f5eded;
-    font-family: 'FreightSans W03', sans-serif;
-
-
-
-    /* font-family: 'FreightSans W03', sans-serif; */
+    font-family: 'Questrial', sans-serif;
 
     width: 100%;
     height: 100%;
@@ -40,7 +49,10 @@ html, body {
     line-height: 1.8em;
     color:#334259;
 }
+.page-title{
+  font-family: 'Domine Medium', serif !important;
 
+}
 p, li {
     line-height: 24px;
     -webkit-letter-spacing: -0.024%;
@@ -66,8 +78,6 @@ body {
 
 #logo {
     display: block;
-    /*position: absolute;*/
-    /*margin: 48px 20px;*/
 }
 #logo svg {
     width: 40px;
@@ -160,7 +170,7 @@ a.internal.embed {
   padding-left: 10px;
   text-decoration: none;
 }
- a.internal.embed:hover {
+a.internal.embed:hover {
   /* opacity: 0.5; */
   background:rgba(var(--color-embed), .5);
   border-radius: 4px;
@@ -258,12 +268,6 @@ img {
     width: 100%;
 }
 
-/*p > span {
-    background-color: #666666;
-}
-p > span a {
-    background-color: #FF0000;
-}*/
 
 #svg {
     position: absolute;
@@ -279,37 +283,15 @@ iframe {
     border: none;
 }
 
-/*.tippy-box {
-    position: relative;
-}
-.tippy-box:before {
-    content: "";
-    position: absolute;
-    left: -20px;
-    top: -20px;
-    width: 100%;
-    height: 100%;
-    padding: 20px 15px;
-}
-
-.tippy-box[data-placement^=right]>.tippy-arrow:before {
-    left: -15px;
-    border-width: 16px 16px 16px 0;
-    top: 13px !important;
-}
-
-[data-tippy-root] {
-    left: 10px !important;
-    top: -20px !important;
-}*/
 
 .tippy-box>.tippy-arrow:before {
-    /*left: -15px;
-    border-width: 16px 16px 16px 0;
-    top: 13px !important;*/
+
     transform: scale(2);
 }
 
+/*           */
+/* backlinks */
+/*           */
 
 .backlinks {
     background-color: #FFFFFF;
