@@ -29,6 +29,7 @@ _linksTo = []
 
 page_data = {}
 private_blocks = {}
+private_pages = {}
 hiddenTags = ['#personal', '#agenda', '#EntryPoint']
 
 
@@ -36,13 +37,16 @@ def collectIDs(page):
     '''Collects page names and UUIDs'''
     pagestring = json.dumps(page)
 
+    # generate UUID for page name
+    uuid = shortuuid.uuid(name=page['title'])[:8]
+
     # only remove/skip page if private tag in page attributess
     personalSearch = search(".*Tags::.*#personal.*", pagestring)
     if personalSearch is not None:
         # print('Private page: [[' + page['title'] + ']]')
+        private_pages[page['title']] = uuid
         return
-    # generate UUID for page name
-    uuid = shortuuid.uuid(name=page['title'])[:8]
+
     collectChildIDs(page)
 
     page_uuids[page['title']] = uuid
@@ -287,7 +291,10 @@ def _findChildParent(blockID):
                 private = False
             else:
                 private = True
-            return page_uuids[data[parent]['title']], private, string
+            try:
+                return page_uuids[data[parent]['title']], private, string
+            except KeyError:
+                return private_pages[data[parent]['title']], private, string
         else:
             pass
 
@@ -452,7 +459,7 @@ def renderMarkdown(text, ignoreLinks=False, heading=False, alignment=False):
 
 
 # load json backup
-jsonFile = 'MattPublic.json'
+jsonFile = 'MattVogel.json'
 # read database json
 with open(jsonFile, 'r') as f:
     data = json.loads(f.read())
