@@ -11,6 +11,8 @@ import pprint
 from re import search
 from bs4 import BeautifulSoup
 from jsonpath_ng import jsonpath, parse
+from urlextract import URLExtract
+import urllib
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -127,9 +129,9 @@ def processPage(page):
         item['link_from'] = uuid
         item['title'] = renderMarkdown(title, ignoreLinks=True)
         item['text'] = renderMarkdown(item['text'], ignoreLinks=True)
-        print(item['text'])
+        # print(item['text'])
         # item['text'] = item['text']
-        print(item['text'])
+        # print(item['text'])
 
         # if item['uuid'] == uuid:
         #    continue
@@ -312,7 +314,7 @@ def _processInternalBlockAlias(match, block):
         try:
             if not private:
                 # print("not private internal block alias")
-                return('<a class="internal-block" data-uuid="' + parentUID + '" href="/' + parentUID + '#' + internalBlock + '">' + name + '</a>')
+                return('<a class="internal-block embed" data-uuid="' + parentUID + '" href="/' + parentUID + '#' + internalBlock + '">' + name + '</a>')
             else:
                 # print('private internal block alias')
                 return ('<a class="internal-block private" data-uuid="' + parentUID + '" href="/' + parentUID + '">' + name + '</a>')
@@ -321,7 +323,7 @@ def _processInternalBlockAlias(match, block):
             print(parentUID)
             print(e)
             print("---")
-        return '<a class="internal-block" data-uuid="' + parentUID + '" href="/' + parentUID + '#' + internalBlock + '">' + name + '</a>'
+        return '<a class="internal-block embed" data-uuid="' + parentUID + '" href="/' + parentUID + '#' + internalBlock + '">' + name + '</a>'
     except TypeError:
         # print('private internal block alias')
         return f'<a class="internal-block private" >{name}</a>'
@@ -347,6 +349,35 @@ def _processInternalEmbed(match, block):
         return f'<a class="internal embed" href="/{parentUID}#{blockID}">{renderMarkdown(string)}</a>'
     except TypeError:
         return f'<a class="internal embed private" href="">{blockID}</a>'
+
+
+def _processExternalAlias(match, block):
+    # print(match.group(2))
+    # r'<a class="external" href="/2" target="_blank">\1</a>
+    return f'<a class="external" href="{match.group(2)}" target="_blank">{match.group(1)}</a>'
+
+
+def _processBareURL(url):
+    # deal with protocallless urls
+    if not urllib.parse.urlparse(url).scheme:
+        url = 'http://' + url
+    # deal with custom twitter embedding
+    if "twitter.com" in url:
+        return f'<blockquote class="twitter-tweet"><a href="{url}"></a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>'
+    try:
+        # find the title of the page to use for the link title
+        soup = BeautifulSoup(urllib.request.urlopen(url), features="html.parser")
+        link_title = soup.title.string[:35]
+        if len(soup.title.string) > 35:
+            link_title = link_title + '...'
+    except Exception as e:
+        # if page has no 'title' use a shortend version of the url
+        if len(url) > 25:
+            link_title = url[:25] + '...'
+        else:
+            link_title = url
+    # print(link_title)
+    return f'<a class="external" href="{url}" target="_blank">{link_title}</a>'
 
 
 def _processExternalEmbed(match, block, type):
@@ -405,15 +436,14 @@ def renderMarkdown(text, ignoreLinks=False, heading=False, alignment=False):
         wordcount += len(text.split())
     # todo correctly render page alias {{alias: [[Roam Research]] Roam}}
     # todo fix URLs that contain a #
-    # text = re.sub(r'\b(.+)\:\:', lambda x: _processAttribute(x, text), text)  # attributes
+    text = re.sub(r'\b(.+)\:\:', lambda x: _processAttribute(x, text), text)  # attributes
     text = re.sub(r'{{\[\[TODO\]\]}}', r'<input type="checkbox" onclick="return false;">', text)  # unchecked TO DO
     text = re.sub(r'{{{\[\[DONE\]\]}}}}', r'<input type="checkbox" onclick="return false;" checked>', text)  # checked TO DO alt
     text = re.sub(r'{{\[\[DONE\]\]}}', r'<input type="checkbox" onclick="return false;" checked>', text)  # checked TO DO
     text = re.sub(r'\!\[([^\[\]]*?)\]\((.+?)\)', r'<img src="\2" alt="\1" />', text)  # markdown images
     text = re.sub(r'\{\{\[\[youtube\]\]:(.+?)\}\}', lambda x: _processExternalEmbed(x, text, "youtube"), text)  # external clojure embeds
     text = re.sub(r'\{\{(.*):.*[^\{\}]\((.+?)\)\).*\}\}', lambda x: _processInternalEmbed(x, text), text)  # clojure embeds and aliases \{\{(.*):.*([^\{\}]\(.+?\)\)).*\}\}
-    # todo create dropdown for text versioning
-    # text = re.sub(r'(\{\{or:(.+?)\|.+?\}\})', r'<span class="inline-option">\2</span>', text)  # text versioning
+
     text = re.sub(r'(\{\{or:(.+?)\}\})', lambda x: _processTextVersion(x, text), text)  # text versioning
 
     if ignoreLinks:
@@ -424,7 +454,7 @@ def renderMarkdown(text, ignoreLinks=False, heading=False, alignment=False):
     else:
         text = re.sub(r'\[([^\[\]]+?)\]\(\[\[(.+?)\]\]\)', lambda x: _processInternalAlias(x, text), text)  # internal page aliases
         text = re.sub(r'\[([^\[\]]+?)\]\(\(\((.+?)\)\)\)', lambda x: _processInternalBlockAlias(x, text), text)  # internal block aliases
-        text = re.sub(r'\[([^\[\]]+?)\]\(([^\[\]\(].+?)\)', r'<a class="external" href="/2" target="_blank">\1</a>', text)  # external aliases
+        text = re.sub(r'\[([^\[\]]+?)\]\(([^\[\]\(].+?)\)', lambda x: _processExternalAlias(x, text), text)  # external aliases
         text = re.sub(r'(?<!href="\/[A-Za-z0-9\-\_]{8})(#(\w+))', lambda x: _processInternalTag(x, text), text)  # tags without brackets
 
         text = re.sub(r'(\#\[\[(.+?)\]\])', lambda x: _processInternalTag(x, text), text)  # tag with brackets
@@ -451,6 +481,19 @@ def renderMarkdown(text, ignoreLinks=False, heading=False, alignment=False):
 
     text = re.sub(r'\(\((.+?)\)\)', lambda x: isBlockPrivate(x.group(1), text), text)  # block ref
 
+    # deal with bare URLs
+    # not a huge fan of this
+    forbidden_chars = ['<a', '<img', '[', '<code', '<iframe']
+    results = []
+    for substring in forbidden_chars:
+        results.append(substring in text)
+    if not any(results):
+        extractor = URLExtract()
+        if extractor.has_urls(text):
+            for url in extractor.gen_urls(text):
+                text = text.replace(url, _processBareURL(url))
+                print(text)
+
     if heading:
         text = f'<h{heading}>{text}</h{heading}>'
     if alignment:
@@ -459,7 +502,7 @@ def renderMarkdown(text, ignoreLinks=False, heading=False, alignment=False):
 
 
 # load json backup
-jsonFile = 'MattVogel.json'
+jsonFile = 'MattPublic.json'
 # read database json
 with open(jsonFile, 'r') as f:
     data = json.loads(f.read())

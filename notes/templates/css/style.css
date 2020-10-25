@@ -156,7 +156,7 @@ a.internal.tag.private {
 }
 /* ------ Block Embeds ------ */
 
-a.internal.embed {
+a.internal.embed, a.internal-block.embed {
   background:
      linear-gradient(
        to right,
@@ -170,7 +170,7 @@ a.internal.embed {
   padding-left: 10px;
   text-decoration: none;
 }
-a.internal.embed:hover {
+a.internal.embed:hover, a.internal-block.embed:hover {
   /* opacity: 0.5; */
   background:rgba(var(--color-embed), .5);
   border-radius: 4px;
