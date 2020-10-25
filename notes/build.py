@@ -351,6 +351,24 @@ def _processInternalEmbed(match, block):
         return f'<a class="internal embed private" href="">{blockID}</a>'
 
 
+def _processInternaPagelEmbed(match, block):
+    '''
+        Processes clojure elements that look like this
+        {{alias: [[Theme Tester]] Clojure Page Alias}}
+
+    '''
+    name = renderMarkdown(match.group(1))
+    pageName = match.group(2)
+    string = match.group(3)
+    try:
+        parentUID = page_uuids[pageName]
+        # todo there's no error handling here, what if the embed it from a private page?
+        # return f'<span class="internal embed">{renderMarkdown(m.context.value["string"])}</span>'
+        return f'<a class="internal embed" href="/{parentUID}">{renderMarkdown(string)}</a>'
+    except TypeError:
+        return f'<a class="internal embed private" href="">{parentUID}</a>'
+
+
 def _processExternalAlias(match, block):
     # print(match.group(2))
     # r'<a class="external" href="/2" target="_blank">\1</a>
@@ -442,7 +460,8 @@ def renderMarkdown(text, ignoreLinks=False, heading=False, alignment=False):
     text = re.sub(r'{{\[\[DONE\]\]}}', r'<input type="checkbox" onclick="return false;" checked>', text)  # checked TO DO
     text = re.sub(r'\!\[([^\[\]]*?)\]\((.+?)\)', r'<img src="\2" alt="\1" />', text)  # markdown images
     text = re.sub(r'\{\{\[\[youtube\]\]:(.+?)\}\}', lambda x: _processExternalEmbed(x, text, "youtube"), text)  # external clojure embeds
-    text = re.sub(r'\{\{(.*):.*[^\{\}]\((.+?)\)\).*\}\}', lambda x: _processInternalEmbed(x, text), text)  # clojure embeds and aliases \{\{(.*):.*([^\{\}]\(.+?\)\)).*\}\}
+    text = re.sub(r'\{\{(.*):.*[^\{\}]\((.+?)\)\)(.*)\}\}', lambda x: _processInternalEmbed(x, text), text)  # clojure embeds and Block aliases \{\{(.*):.*([^\{\}]\(.+?\)\)).*\}\}
+    text = re.sub(r'\{\{(.*):.*[^\{\}]\[(.+?)\]\](.*)\}\}', lambda x: _processInternaPagelEmbed(x, text), text)  # clojure page aliases
 
     text = re.sub(r'(\{\{or:(.+?)\}\})', lambda x: _processTextVersion(x, text), text)  # text versioning
 
