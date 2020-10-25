@@ -430,6 +430,25 @@ def _processTextVersion(match, block):
     return select
 
 
+def _processSlider(match, block):
+    # print(block)
+    # once the output for sliders are expanded this will also deal with the value
+    # {
+    #     "string": "{{[[slider]]}}",
+    #     "props": {
+    #     "slider": {
+    #     "mainmoniker@gmail.com": 6
+    #     }
+    #     },
+    #     "create-email": "mainmoniker@gmail.com",
+    #     "create-time": 1603655392635,
+    #     "uid": "qcDqoJxJ2",
+    #     "edit-time": 1603655395746,
+    #     "edit-email": "mainmoniker@gmail.com"
+    #     }
+    return '<div class="slide-container"><input type="range" min="1" max="10" value="5" class="slider" id="myRange" onclick="return false;" disabled></div>'
+
+
 def renderMarkdown(text, ignoreLinks=False, heading=False, alignment=False):
     if ':hiccup' in text:
         # THIS DOES NOT WORK WELL !!! VERY BROKEN
@@ -462,6 +481,7 @@ def renderMarkdown(text, ignoreLinks=False, heading=False, alignment=False):
     text = re.sub(r'\{\{\[\[youtube\]\]:(.+?)\}\}', lambda x: _processExternalEmbed(x, text, "youtube"), text)  # external clojure embeds
     text = re.sub(r'\{\{(.*):.*[^\{\}]\((.+?)\)\)(.*)\}\}', lambda x: _processInternalEmbed(x, text), text)  # clojure embeds and Block aliases \{\{(.*):.*([^\{\}]\(.+?\)\)).*\}\}
     text = re.sub(r'\{\{(.*):.*[^\{\}]\[(.+?)\]\](.*)\}\}', lambda x: _processInternaPagelEmbed(x, text), text)  # clojure page aliases
+    text = re.sub(r'\{\{\[\[slider\]\](.*)\}\}', lambda x: _processSlider(x, text), text)  # sliders
 
     text = re.sub(r'(\{\{or:(.+?)\}\})', lambda x: _processTextVersion(x, text), text)  # text versioning
 
