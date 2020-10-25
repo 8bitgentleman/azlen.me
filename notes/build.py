@@ -408,7 +408,7 @@ def _processTextVersion(match, block):
     for o in textOptions:
         option = f'<option value="{o}">{o}</option>'
         options += option
-    select = f'<select>{options}</select>'
+    select = f'<select class="text-versioning">{options}</select>'
     return select
 
 
@@ -492,7 +492,7 @@ def renderMarkdown(text, ignoreLinks=False, heading=False, alignment=False):
         if extractor.has_urls(text):
             for url in extractor.gen_urls(text):
                 text = text.replace(url, _processBareURL(url))
-                print(text)
+                # print(text)
 
     if heading:
         text = f'<h{heading}>{text}</h{heading}>'
@@ -502,7 +502,9 @@ def renderMarkdown(text, ignoreLinks=False, heading=False, alignment=False):
 
 
 # load json backup
-jsonFile = 'MattPublic.json'
+jsonFile = 'Theme Tester.json'
+# jsonFile = 'MattPublic.json'
+
 # read database json
 with open(jsonFile, 'r') as f:
     data = json.loads(f.read())
