@@ -476,6 +476,62 @@ body.dark select.text-versioning:focus {
 body.dark select.text-versioning option {
 	font-weight:normal;
 }
+/*                  */
+/*      inputs      */
+/*                  */
+/* input[type="checkbox" i], .check, input[type="checkbox"] {
+  color: red !important;
+  background-color: red !important;
+  background: red !important;
+
+} */
+.checkbox {
+    display: inline-flex;
+    cursor: pointer;
+    position: relative;
+}
+
+/* .checkbox > span {
+    color: #34495E;
+    padding: 0.5rem 0.25rem;
+} */
+
+.checkbox > input {
+    height: 13px;
+    width: 13px;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    -o-appearance: none;
+    appearance: none;
+    border: 1px solid var(--page-background);
+    border-radius: 4px;
+    outline: none;
+    transition-duration: 0.3s;
+    background-color: transparent;
+    cursor: pointer;
+  }
+
+.checkbox > input:checked {
+    border: 1px solid var(--page-background);
+    background-color: rgb(var(--color-link), 1);
+}
+body.dark .checkbox > input:checked, body.dark .checkbox > input {
+  border: 1px solid var(--background-color) !important;
+}
+.checkbox > input:checked + span::before {
+    content: '\2713';
+    display: block;
+    text-align: center;
+    color: var(--background-color);
+    border: 1px solid var(--page-background);
+    position: absolute;
+    left: 0.7rem;
+    top: 0.2rem;
+}
+
+.checkbox > input:active {
+    border: 2px solid var(--page-background);
+}
 
 /*                  */
 /* Custom data tags */

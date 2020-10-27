@@ -486,6 +486,13 @@ def _processQueries(match, block):
     return "<b>Query:</b>" + match.group(1)
 
 
+def _processCheckmark(checked):
+    if checked:
+        return '<span class="checkbox"><input class="check" type="checkbox" onclick="return false;" checked></span>'
+    else:
+        return '<span class="checkbox"><input class="check" type="checkbox" onclick="return false;"></span>'
+
+
 def renderMarkdown(text, ignoreLinks=False, heading=False, alignment=False, properties=False):
     if ':hiccup' in text:
         # THIS DOES NOT WORK WELL !!! VERY BROKEN
@@ -511,9 +518,9 @@ def renderMarkdown(text, ignoreLinks=False, heading=False, alignment=False, prop
     # todo correctly render page alias {{alias: [[Roam Research]] Roam}}
     # todo fix URLs that contain a #
     text = re.sub(r'\b(.+)\:\:', lambda x: _processAttribute(x, text), text)  # attributes
-    text = re.sub(r'{{\[\[TODO\]\]}}', r'<input type="checkbox" onclick="return false;">', text)  # unchecked TO DO
-    text = re.sub(r'{{{\[\[DONE\]\]}}}}', r'<input type="checkbox" onclick="return false;" checked>', text)  # checked TO DO alt
-    text = re.sub(r'{{\[\[DONE\]\]}}', r'<input type="checkbox" onclick="return false;" checked>', text)  # checked TO DO
+    text = re.sub(r'{{\[\[TODO\]\]}}', _processCheckmark(False), text)  # unchecked TO DO
+    text = re.sub(r'{{{\[\[DONE\]\]}}}}', _processCheckmark(True), text)  # checked TO DO alt
+    text = re.sub(r'{{\[\[DONE\]\]}}', _processCheckmark(True), text)  # checked TO DO
     text = re.sub(r'\!\[([^\[\]]*?)\]\((.+?)\)', r'<img src="\2" alt="\1" />', text)  # markdown images
     text = re.sub(r'\{\{\[\[youtube\]\]:(.+?)\}\}', lambda x: _processExternalEmbed(x, text, "youtube"), text)  # external clojure embeds
     text = re.sub(r'\{\{\[\[query\]\]:(.+?)\}\}', lambda x: _processQueries(x, text), text)  # queries
@@ -644,6 +651,6 @@ def main():
 
 if __name__ == '__main__':
     # load json backup
-    jsonFile = 'Theme Tester.json'
-    # jsonFile = 'MattPublic.json'
+    # jsonFile = 'Theme Tester.json'
+    jsonFile = 'MattPublic.json'
     main()
