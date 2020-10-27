@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import json
 import jinja2
 import os
@@ -108,12 +109,17 @@ def processPage(page):
                 if result is not None:
                     personalSearch = True
                     break
+            # grab block properties
+            if 'props' in child:
+                properties = child['props']
+            else:
+                properties = False
 
             if personalSearch is not None:
                 pass
             else:
                 children.append({
-                    'html': renderMarkdown(fix_encoding(child['string']), heading=heading, alignment=alignment) + renderBullets(child)
+                    'html': renderMarkdown(fix_encoding(child['string']), heading=heading, alignment=alignment, properties=properties) + renderBullets(child)
                 })
     template_data = {
         'title': renderMarkdown(title, ignoreLinks=True),
@@ -194,11 +200,13 @@ def renderBullets(block):
                 alignment = child['text-align']
             else:
                 alignment = False
-            output += renderMarkdown(child['string'], heading=heading, alignment=alignment)
-            # print(output)
-            # new_li = soup.new_tag('li')
-            # new_li.string = renderMarkdown(child['string'], heading=heading)
-            # soup.ul.append(new_li)
+            # grab block properties
+            if 'props' in child:
+                properties = child['props']
+            else:
+                properties = False
+
+            output += renderMarkdown(child['string'], heading=heading, alignment=alignment, properties=properties)
 
             if 'children' in child.keys():
                 output += renderBullets(child)
@@ -325,8 +333,11 @@ def _processInternalBlockAlias(match, block):
             print("---")
         return '<a class="internal-block embed" data-uuid="' + parentUID + '" href="/' + parentUID + '#' + internalBlock + '">' + name + '</a>'
     except TypeError:
-        # print('private internal block alias')
-        return f'<a class="internal-block private" >{name}</a>'
+        soup = BeautifulSoup(features="html.parser")
+        new_div = soup.new_tag('a')
+        new_div.string = name
+        new_div['class'] = "internal-block private"
+        return str(new_div)
 
 
 def _processInternalEmbed(match, block):
@@ -339,16 +350,26 @@ def _processInternalEmbed(match, block):
     blockID = match.group(2)
 
     parent = _findChildParent(blockID)
+    # html for new block
+    soup = BeautifulSoup(features="html.parser")
+    new_div = soup.new_tag('a')
     try:
         parentUID = parent[0]
         private = parent[1]
         string = parent[2]
 
         # todo there's no error handling here, what if the embed it from a private page?
-        # return f'<span class="internal embed">{renderMarkdown(m.context.value["string"])}</span>'
-        return f'<a class="internal embed" href="/{parentUID}#{blockID}">{renderMarkdown(string)}</a>'
+        new_div.string = renderMarkdown(string)
+        new_div['class'] = "internal embed"
+        new_div['href'] = "/" + parentUID + "#" + blockID
+        return str(new_div)
+        # return f'<a class="internal embed" href="/{parentUID}#{blockID}">{renderMarkdown(string)}</a>'
     except TypeError:
-        return f'<a class="internal embed private" href="">{blockID}</a>'
+        new_div.string = blockID
+        new_div['class'] = "internal embed private"
+        new_div['href'] = ""
+        return str(new_div)
+        # return f'<a class="internal embed private" href="">{blockID}</a>'
 
 
 def _processInternaPagelEmbed(match, block):
@@ -381,7 +402,18 @@ def _processBareURL(url):
         url = 'http://' + url
     # deal with custom twitter embedding
     if "twitter.com" in url:
-        return f'<blockquote class="twitter-tweet"><a href="{url}"></a></blockquote> <script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>'
+        soup = BeautifulSoup(features="html.parser")
+        new_tweet = soup.new_tag('blockquote')
+        new_tweet['class'] = "twitter-tweet"
+        new_link = soup.new_tag("a", href=url)
+        new_tweet.append(new_link)
+        s = BeautifulSoup(features="html.parser")
+        new_script = s.new_tag('script')
+        new_script['src'] = "https://platform.twitter.com/widgets.js"
+        new_script['charset'] = "utf-8"
+        new_script.attrs['async'] = None
+        tweet = str(new_tweet) + str(new_script)
+        return tweet
     try:
         # find the title of the page to use for the link title
         soup = BeautifulSoup(urllib.request.urlopen(url), features="html.parser")
@@ -430,26 +462,27 @@ def _processTextVersion(match, block):
     return select
 
 
-def _processSlider(match, block):
-    # print(block)
-    # once the output for sliders are expanded this will also deal with the value
-    # {
-    #     "string": "{{[[slider]]}}",
-    #     "props": {
-    #     "slider": {
-    #     "mainmoniker@gmail.com": 6
-    #     }
-    #     },
-    #     "create-email": "mainmoniker@gmail.com",
-    #     "create-time": 1603655392635,
-    #     "uid": "qcDqoJxJ2",
-    #     "edit-time": 1603655395746,
-    #     "edit-email": "mainmoniker@gmail.com"
-    #     }
-    return '<div class="slide-container"><input type="range" min="1" max="10" value="5" class="slider" id="myRange" onclick="return false;" disabled></div>'
+def _processSlider(match, block, properties):
+
+    print(properties)
+    if properties:
+        try:
+            value = list(properties['slider'].values())[0]
+        except Exception:
+            value = 0
+    else:
+        value = 5
+    soup = BeautifulSoup(features="html.parser")
+    new_div = soup.new_tag('div')
+    new_div['class'] = "slide-container"
+    new_tag = soup.new_tag("input", type="range", min="1", max="10", value=value, id="myRange", onclick="return false;")
+    new_tag['class'] = "slider"
+    new_tag.attrs['disabled'] = None
+    new_div.append(new_tag)
+    return str(new_div)
 
 
-def renderMarkdown(text, ignoreLinks=False, heading=False, alignment=False):
+def renderMarkdown(text, ignoreLinks=False, heading=False, alignment=False, properties=False):
     if ':hiccup' in text:
         # THIS DOES NOT WORK WELL !!! VERY BROKEN
         # text = 'hr '
@@ -481,7 +514,7 @@ def renderMarkdown(text, ignoreLinks=False, heading=False, alignment=False):
     text = re.sub(r'\{\{\[\[youtube\]\]:(.+?)\}\}', lambda x: _processExternalEmbed(x, text, "youtube"), text)  # external clojure embeds
     text = re.sub(r'\{\{(.*):.*[^\{\}]\((.+?)\)\)(.*)\}\}', lambda x: _processInternalEmbed(x, text), text)  # clojure embeds and Block aliases \{\{(.*):.*([^\{\}]\(.+?\)\)).*\}\}
     text = re.sub(r'\{\{(.*):.*[^\{\}]\[(.+?)\]\](.*)\}\}', lambda x: _processInternaPagelEmbed(x, text), text)  # clojure page aliases
-    text = re.sub(r'\{\{\[\[slider\]\](.*)\}\}', lambda x: _processSlider(x, text), text)  # sliders
+    text = re.sub(r'\{\{\[\[slider\]\](.*)\}\}', lambda x: _processSlider(x, text, properties), text)  # sliders
 
     text = re.sub(r'(\{\{or:(.+?)\}\})', lambda x: _processTextVersion(x, text), text)  # text versioning
 
@@ -540,70 +573,72 @@ def renderMarkdown(text, ignoreLinks=False, heading=False, alignment=False):
     return text
 
 
-# load json backup
-jsonFile = 'Theme Tester.json'
-# jsonFile = 'MattPublic.json'
+def main():
 
-# read database json
-with open(jsonFile, 'r') as f:
-    data = json.loads(f.read())
-for page in data:  # get page ids
-    collectIDs(page)
+    # read database json
+    with open(jsonFile, 'r') as f:
+        data = json.loads(f.read())
+    for page in data:  # get page ids
+        collectIDs(page)
 
-for page in data:
-    processPage(page)
+    for page in data:
+        processPage(page)
 
-pagecount = len(page_data.keys())
-# remove all files in public folder. these will be regenerated later
-files = glob.glob('./public/*')
-for f in files:
-    if os.path.isdir(f):
-        shutil.rmtree(f)
-    else:
-        os.remove(f)
+    pagecount = len(page_data.keys())
+    # remove all files in public folder. these will be regenerated later
+    files = glob.glob('./public/*')
+    for f in files:
+        if os.path.isdir(f):
+            shutil.rmtree(f)
+        else:
+            os.remove(f)
 
-# initialize build directory
-src_files = os.listdir('./www')
-for file_name in src_files:
-    full_file_name = os.path.join('./www', file_name)
-    if os.path.isfile(full_file_name):
-        shutil.copy(full_file_name, './public')
-    elif os.path.isdir(full_file_name):
-        shutil.copytree(full_file_name, os.path.join('./public', file_name))
+    # initialize build directory
+    src_files = os.listdir('./www')
+    for file_name in src_files:
+        full_file_name = os.path.join('./www', file_name)
+        if os.path.isfile(full_file_name):
+            shutil.copy(full_file_name, './public')
+        elif os.path.isdir(full_file_name):
+            shutil.copytree(full_file_name, os.path.join('./public', file_name))
+
+    def _checkNamespace(page):
+        '''checks for namespaces with specific templates'''
+
+        namespace_split = page['title'].split("/")
+        if len(namespace_split) > 1:
+            if namespace_split[0] == 'Book':
+                template = namespace_split[0].lower() + '_template.html'
+                # print(template)
+                return template
+        else:
+            return False
+
+    for page in data:
+        template_name = 'template.html'
+        namespace_template = _checkNamespace(page)
+        if namespace_template:
+            template_name = namespace_template
+        # TODO create new templates
+        # TODO use correct template
+        # TODO figure out how templating works
+        renderPage(page, './public', template='template.html')
+        renderPage(page, './public', template='embed.html', filename='embed.html')
+        renderPage(page, './public', template='page.html', filename='page.html')
+        try:
+            template_data = page_data[page['title']]
+            # print(len(template_data["references"]))
+        except Exception:
+            pass
+
+    # run through twice so that you can put jinja/html directly into Notion
+    # perhaps this feature could be made optional
+    # template = env.from_string(outputHTML)
+    # outputHTML = template.render(**template_data)
 
 
-def _checkNamespace(page):
-    '''checks for namespaces with specific templates'''
-
-    namespace_split = page['title'].split("/")
-    if len(namespace_split) > 1:
-        if namespace_split[0] == 'Book':
-            template = namespace_split[0].lower() + '_template.html'
-            # print(template)
-            return template
-    else:
-        return False
-
-
-for page in data:
-    template_name = 'template.html'
-    namespace_template = _checkNamespace(page)
-    if namespace_template:
-        template_name = namespace_template
-    # TODO create new templates
-    # TODO use correct template
-    # TODO figure out how templating works
-    renderPage(page, './public', template='template.html')
-    renderPage(page, './public', template='embed.html', filename='embed.html')
-    renderPage(page, './public', template='page.html', filename='page.html')
-    try:
-        template_data = page_data[page['title']]
-        # print(len(template_data["references"]))
-    except Exception:
-        pass
-
-
-# run through twice so that you can put jinja/html directly into Notion
-# perhaps this feature could be made optional
-# template = env.from_string(outputHTML)
-# outputHTML = template.render(**template_data)
+if __name__ == '__main__':
+    # load json backup
+    jsonFile = 'Theme Tester.json'
+    # jsonFile = 'MattPublic.json'
+    main()
