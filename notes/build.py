@@ -472,13 +472,18 @@ def _processSlider(match, block, properties):
     else:
         value = 5
     soup = BeautifulSoup(features="html.parser")
-    new_div = soup.new_tag('div')
-    new_div['class'] = "slide-container"
-    new_tag = soup.new_tag("input", type="range", min="1", max="10", value=value, id="myRange", onclick="return false;")
-    new_tag['class'] = "slider"
-    new_tag.attrs['disabled'] = None
-    new_div.append(new_tag)
-    return str(new_div)
+    slider_container = soup.new_tag('div')
+    slider_container['class'] = "slide-container"
+    input_slider = soup.new_tag("input", type="range", min="1", max="10", value=value, id="myRange", onclick="return false;")
+    input_slider['class'] = "slider"
+    input_slider.attrs['disabled'] = None
+    slider_container.append(input_slider)
+    return str(slider_container)
+
+
+def _processQueries(match, block):
+    print(match.group(1))
+    return "<b>Query:</b>" + match.group(1)
 
 
 def renderMarkdown(text, ignoreLinks=False, heading=False, alignment=False, properties=False):
@@ -511,6 +516,7 @@ def renderMarkdown(text, ignoreLinks=False, heading=False, alignment=False, prop
     text = re.sub(r'{{\[\[DONE\]\]}}', r'<input type="checkbox" onclick="return false;" checked>', text)  # checked TO DO
     text = re.sub(r'\!\[([^\[\]]*?)\]\((.+?)\)', r'<img src="\2" alt="\1" />', text)  # markdown images
     text = re.sub(r'\{\{\[\[youtube\]\]:(.+?)\}\}', lambda x: _processExternalEmbed(x, text, "youtube"), text)  # external clojure embeds
+    text = re.sub(r'\{\{\[\[query\]\]:(.+?)\}\}', lambda x: _processQueries(x, text), text)  # queries
     text = re.sub(r'\{\{(.*):.*[^\{\}]\((.+?)\)\)(.*)\}\}', lambda x: _processInternalEmbed(x, text), text)  # clojure embeds and Block aliases
     text = re.sub(r'\{\{(.*):.*[^\{\}]\[(.+?)\]\](.*)\}\}', lambda x: _processInternaPagelEmbed(x, text), text)  # clojure page aliases
     text = re.sub(r'\{\{\[\[slider\]\](.*)\}\}', lambda x: _processSlider(x, text, properties), text)  # sliders
@@ -532,7 +538,7 @@ def renderMarkdown(text, ignoreLinks=False, heading=False, alignment=False, prop
         text = re.sub(r'(?<!\#)\[\[(.+?)\]\]', lambda x: _processInternalLink(x, text), text)  # pages with brackets
 
     text = re.sub(r'\n', r'<br>', text)  # newline
-    text = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', text)  # bold
+    text = re.sub(r'\*\*(.*?)\*\*', r'<b>\1</b>', text)  # bold
     text = re.sub(r'\_\_(.*?)\_\_', r'<em>\1</em>', text)  # italic
     text = re.sub(r'\~\~(.+?)\~\~', r'<s>\1</s>', text)  # strikethrough
     text = re.sub(r'\^\^(.+?)\^\^', r'<span class="highlight">\1</span>', text)  # highlight
