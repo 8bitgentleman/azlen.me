@@ -363,17 +363,9 @@ def _processInternalEmbed(match, block):
         string = parent[2]
 
         # todo there's no error handling here, what if the embed it from a private page?
-        new_div.string = renderMarkdown(string)
-        new_div['class'] = "internal embed"
-        new_div['href'] = "/" + parentUID + "#" + blockID
-        return str(new_div)
-        # return f'<a class="internal embed" href="/{parentUID}#{blockID}">{renderMarkdown(string)}</a>'
+        return f'<a class="internal embed" href="/{parentUID}#{blockID}">{renderMarkdown(string)}</a>'
     except TypeError:
-        new_div.string = blockID
-        new_div['class'] = "internal embed private"
-        new_div['href'] = ""
-        return str(new_div)
-        # return f'<a class="internal embed private" href="">{blockID}</a>'
+        return f'<a class="internal embed private" href="">{blockID}</a>'
 
 
 def _processInternaPagelEmbed(match, block):
@@ -385,10 +377,12 @@ def _processInternaPagelEmbed(match, block):
     name = renderMarkdown(match.group(1))
     pageName = match.group(2)
     string = match.group(3)
+
     try:
         parentUID = page_uuids[pageName]
         # todo there's no error handling here, what if the embed it from a private page?
         # return f'<span class="internal embed">{renderMarkdown(m.context.value["string"])}</span>'
+
         return f'<a class="internal embed" href="/{parentUID}">{renderMarkdown(string)}</a>'
     except TypeError:
         return f'<a class="internal embed private" href="">{parentUID}</a>'
@@ -459,6 +453,7 @@ def _processTextVersion(match, block):
     text = renderMarkdown(match.group(2))
     textOptions = text.split("|")
     options = ''
+
     for o in textOptions:
         option = f'<option value="{o}">{o}</option>'
         options += option
@@ -467,8 +462,8 @@ def _processTextVersion(match, block):
 
 
 def _processSlider(match, block, properties):
+    '''Creates in-line slider with supplied value'''
 
-    print(properties)
     if properties:
         try:
             value = list(properties['slider'].values())[0]
