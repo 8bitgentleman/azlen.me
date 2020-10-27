@@ -119,7 +119,11 @@ def processPage(page):
                 pass
             else:
                 children.append({
-                    'html': renderMarkdown(fix_encoding(child['string']), heading=heading, alignment=alignment, properties=properties) + renderBullets(child)
+                    'html': renderMarkdown(
+                        fix_encoding(child['string']),
+                        heading=heading,
+                        alignment=alignment,
+                        properties=properties) + renderBullets(child)
                 })
     template_data = {
         'title': renderMarkdown(title, ignoreLinks=True),
@@ -512,7 +516,7 @@ def renderMarkdown(text, ignoreLinks=False, heading=False, alignment=False, prop
     text = re.sub(r'{{\[\[DONE\]\]}}', r'<input type="checkbox" onclick="return false;" checked>', text)  # checked TO DO
     text = re.sub(r'\!\[([^\[\]]*?)\]\((.+?)\)', r'<img src="\2" alt="\1" />', text)  # markdown images
     text = re.sub(r'\{\{\[\[youtube\]\]:(.+?)\}\}', lambda x: _processExternalEmbed(x, text, "youtube"), text)  # external clojure embeds
-    text = re.sub(r'\{\{(.*):.*[^\{\}]\((.+?)\)\)(.*)\}\}', lambda x: _processInternalEmbed(x, text), text)  # clojure embeds and Block aliases \{\{(.*):.*([^\{\}]\(.+?\)\)).*\}\}
+    text = re.sub(r'\{\{(.*):.*[^\{\}]\((.+?)\)\)(.*)\}\}', lambda x: _processInternalEmbed(x, text), text)  # clojure embeds and Block aliases
     text = re.sub(r'\{\{(.*):.*[^\{\}]\[(.+?)\]\](.*)\}\}', lambda x: _processInternaPagelEmbed(x, text), text)  # clojure page aliases
     text = re.sub(r'\{\{\[\[slider\]\](.*)\}\}', lambda x: _processSlider(x, text, properties), text)  # sliders
 
