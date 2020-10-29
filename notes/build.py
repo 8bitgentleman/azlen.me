@@ -33,7 +33,7 @@ _linksTo = []
 page_data = {}
 private_blocks = {}
 private_pages = {}
-hiddenTags = ['#personal', '#agenda', '#EntryPoint']
+hiddenTags = ['#personal', '#agenda', '#EntryPoint', '#conversations']
 
 
 def collectIDs(page):
