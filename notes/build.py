@@ -540,8 +540,9 @@ def renderMarkdown(text, ignoreLinks=False, heading=False, alignment=False, prop
     # todo if attribute exists set a flag so the attribute can be picked up and attributed to the parent block
     if re.match(r'\b(.+)\:\:', text, flags=0):
         isAttribute = True
+    text = re.sub(r'^\[\[>\]\](.*)', r'<blockquote>\1</blockquote>', text)  # blockquote
     text = re.sub(r'\b(.+)\:\:', lambda x: _processAttribute(x, text), text)  # attributes
-    data = re.sub(r'^(\-\-\-)$', r'<hr>', data)
+    text = re.sub(r'^(\-\-\-)$', r'<hr>', text)
     text = re.sub(r'{{\[\[TODO\]\]}}', _processCheckmark(False), text)  # unchecked TO DO
     text = re.sub(r'{{{\[\[DONE\]\]}}}}', _processCheckmark(True), text)  # checked TO DO alt
     text = re.sub(r'{{\[\[DONE\]\]}}', _processCheckmark(True), text)  # checked TO DO
@@ -678,7 +679,7 @@ def main():
 
 if __name__ == '__main__':
     # load json backup
+    # jsonFile = 'Theme Tester.json'
     jsonFile = 'MattPublic.json'
-    # jsonFile = 'MattPublic.json'
     main()
     # pp.pprint(notes_graph)
