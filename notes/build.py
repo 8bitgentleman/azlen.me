@@ -33,7 +33,11 @@ _linksTo = []
 page_data = {}
 private_blocks = {}
 private_pages = {}
-hiddenTags = ['#personal', '#agenda', '#EntryPoint', '#conversations']
+hiddenTags = ['#personal', '#agenda', '[[agenda]]', '#EntryPoint', '#conversations', '[[conversations]]']
+notes_graph = {
+    "edges": [],
+    "nodes": []
+}
 
 
 def collectIDs(page):
@@ -54,6 +58,14 @@ def collectIDs(page):
 
     page_uuids[page['title']] = uuid
     page_names[uuid] = page['title']
+
+    # add node to notes_graph
+    node = {
+        "id": uuid,
+        "path": "notes/public/{}/index.html".format(uuid),
+        "label": page['title']
+    }
+    notes_graph['nodes'].append(node)
 
 
 def collectChildIDs(object):
@@ -150,7 +162,12 @@ def processPage(page):
             references[item['link_to']].append(item)
         else:
             references[item['link_to']] = [item]
-
+        # add edges to notes_graph
+        edge = {
+            "source": uuid,
+            "target": item['link_to']
+        }
+        notes_graph['edges'].append(edge)
     _linksTo = []
 
     page_data[title] = template_data
@@ -363,7 +380,7 @@ def _processInternalEmbed(match, block):
         string = parent[2]
 
         # todo there's no error handling here, what if the embed it from a private page?
-        return f'<a class="internal embed" href="/{parentUID}#{blockID}">{renderMarkdown(string)}</a>'
+        return '<a class="internal embed" href="/{}#{}">{}</a>'.format(parentUID, blockID, renderMarkdown(string))
     except TypeError:
         return f'<a class="internal embed private" href="">{blockID}</a>'
 
@@ -429,6 +446,8 @@ def _processBareURL(url):
 
 
 def _processExternalEmbed(match, block, type):
+    # did I fuck this up and actually need to mutate the url?
+    # https://www.w3schools.com/html/html_youtube.asp
     '''
         Processes external clojure embeds that look like this
         {{[[youtube]]: https://www.youtube.com/watch?v=1otcGrYVSag}}
@@ -494,6 +513,7 @@ def _processCheckmark(checked):
 
 
 def renderMarkdown(text, ignoreLinks=False, heading=False, alignment=False, properties=False):
+    isAttribute = False
     if ':hiccup' in text:
         # THIS DOES NOT WORK WELL !!! VERY BROKEN
         # text = 'hr '
@@ -517,7 +537,11 @@ def renderMarkdown(text, ignoreLinks=False, heading=False, alignment=False, prop
         wordcount += len(text.split())
     # todo correctly render page alias {{alias: [[Roam Research]] Roam}}
     # todo fix URLs that contain a #
+    # todo if attribute exists set a flag so the attribute can be picked up and attributed to the parent block
+    if re.match(r'\b(.+)\:\:', text, flags=0):
+        isAttribute = True
     text = re.sub(r'\b(.+)\:\:', lambda x: _processAttribute(x, text), text)  # attributes
+    data = re.sub(r'^(\-\-\-)$', r'<hr>', data)
     text = re.sub(r'{{\[\[TODO\]\]}}', _processCheckmark(False), text)  # unchecked TO DO
     text = re.sub(r'{{{\[\[DONE\]\]}}}}', _processCheckmark(True), text)  # checked TO DO alt
     text = re.sub(r'{{\[\[DONE\]\]}}', _processCheckmark(True), text)  # checked TO DO
@@ -643,6 +667,9 @@ def main():
         except Exception:
             pass
 
+    # save notes_graph.json
+    with open('templates/notes_graph.json', 'w') as outfile:
+        json.dump(notes_graph, outfile, indent=4)
     # run through twice so that you can put jinja/html directly into Notion
     # perhaps this feature could be made optional
     # template = env.from_string(outputHTML)
@@ -651,6 +678,7 @@ def main():
 
 if __name__ == '__main__':
     # load json backup
-    # jsonFile = 'Theme Tester.json'
     jsonFile = 'MattPublic.json'
+    # jsonFile = 'MattPublic.json'
     main()
+    # pp.pprint(notes_graph)
