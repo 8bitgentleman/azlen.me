@@ -33,7 +33,8 @@ _linksTo = []
 page_data = {}
 private_blocks = {}
 private_pages = {}
-hiddenTags = ['#personal', '#agenda', '[[agenda]]', '#EntryPoint', '#conversations', '[[conversations]]']
+# must escape special characters so regex search works correctly
+hiddenTags = ['#personal', '#agenda', "\[\[agenda\]\]", '#EntryPoint', '#conversations', '\[\[conversations\]\]']
 notes_graph = {
     "edges": [],
     "nodes": []
@@ -78,10 +79,12 @@ def collectChildIDs(object):
                 result = search(".*" + tag + ".*", child['string'])
                 personalSearch = None
                 if result is not None:
+                    # print(tag, result)
                     personalSearch = True
                     break
 
             if personalSearch is not None:
+                # print(child['string'])
                 private_blocks[child['uid']] = child
                 collectChildIDs(child)
             else:
@@ -114,6 +117,10 @@ def processPage(page):
                 alignment = child['text-align']
             else:
                 alignment = False
+            if 'view-type' in child:
+                view_type = child['view-type'][1:]
+            else:
+                view_type = "bullet"
             # check for private parent blocks and remove block if necessary
             for tag in hiddenTags:
                 result = search(".*" + tag + ".*", child['string'])
@@ -135,7 +142,8 @@ def processPage(page):
                         fix_encoding(child['string']),
                         heading=heading,
                         alignment=alignment,
-                        properties=properties) + renderBullets(child)
+                        properties=properties,
+                        view_type=view_type) + renderBullets(child, view_type)
                 })
     template_data = {
         'title': renderMarkdown(title, ignoreLinks=True),
@@ -182,7 +190,6 @@ def renderPage(page, directory='./', template='template.html', filename='index.h
     template_data['website_wordcount'] = wordcount
     template_data['website_pages'] = len(page_names)
     uuid = template_data['uuid']
-
     if uuid in references:
         template_data['references'] = references[uuid]
 
@@ -193,14 +200,35 @@ def renderPage(page, directory='./', template='template.html', filename='index.h
     with open(os.path.join(directory, template_data['uuid'], filename), 'w') as f:
         f.write(outputHTML)
         f.close()
+    if template == 'no_refs.html':
+        nJSON = {}
+        nJSON["id"] = template_data['uuid']
+        nJSON["path"] = './public/' + template_data['uuid'] + '.json'
+        nJSON["title"] = page['title']
+        nJSON["html"] = outputHTML
+        nJSON["backlink_note_ids"] = []
+        nJSON["backlink_note_text"] = []
+        pp.pprint(template_data['references'])
+        for r in template_data['references']:
+            nJSON["backlink_note_ids"].append(r['link_from'])
+            nJSON["backlink_note_text"].append(r['text'])
+
+        with open(os.path.join(directory, template_data['uuid'] + ".json"), 'w') as f:
+            json.dump(nJSON, f, indent=4, separators=(',', ': '), ensure_ascii=False)
 
 
-def renderBullets(block):
+def renderBullets(block, view_type):
     # todo rework this to use beautiful soup
     if 'children' not in block.keys():
         return ''
-
-    output = '<ul id="%s">' % (block['uid'])  # add blockid to div to allow for anchor linking
+    # TODO this UL may need to be set to an OL based on view-type
+    if view_type == "document":
+        output = '<ul id="{}" style="list-style: none;">'.format(block['uid'])
+    elif view_type == "numbered":
+        output = '<ol id="{}">'.format(block['uid'])
+    else:
+        style = ""
+        output = '<ul id="{}" style="{}">'.format(block['uid'], style)  # add blockid to div to allow for anchor linking
     # soup = BeautifulSoup("<ul></ul>", features="html.parser")
     # new_li = soup.new_tag('li')
     # new_l = soup.new_tag('li')
@@ -212,6 +240,7 @@ def renderBullets(block):
         if child['uid'] in private_blocks:
             pass
         else:
+            # print(view_type)
             output += '<li id="%s">' % (child['uid'])  # add blockid to div to allow for anchor linking
             if 'heading' in child:
                 heading = child['heading']
@@ -226,11 +255,15 @@ def renderBullets(block):
                 properties = child['props']
             else:
                 properties = False
-
+            # grab view Type
+            if 'view-type' in child:
+                view_type = child['view-type'][1:]
+            else:
+                view_type = 'bullet'
             output += renderMarkdown(child['string'], heading=heading, alignment=alignment, properties=properties)
 
             if 'children' in child.keys():
-                output += renderBullets(child)
+                output += renderBullets(child, view_type)
             output += '</li>'
             # if 'text-align' in child:
             #     # soup = BeautifulSoup(output, features="html.parser")
@@ -243,6 +276,7 @@ def renderBullets(block):
             # else:
             #     alignment = False
 
+    # TODO may need to dynamically switch end ul to ol
     output += '</ul>'
     return output
 
@@ -252,6 +286,7 @@ def _processInternalLink(match, block):
         Processes Pages that look like this
         [[Page Name]]
     '''
+    # print(block)
     name = match.group(1)
     # todo include # in text to allow for tag css targeting
     if name in page_uuids:
@@ -306,26 +341,31 @@ def _findChildParent(blockID):
     jsonpath_expression = parse("$..uid")
 
     match = jsonpath_expression.find(data)
+    # pp.pprint(match)
     for m in match:
         # target block with correct UID
         if m.value == blockID:
+            # pp.pprint(m)
             # get full tree path for block
             fullPath = str(m.full_path)
             # some super hacky stuff to get the index of the page that the blockID is on
             s = {"[", "]"}
             parent = int(fullPath.split(".")[0].strip("[").strip("]"))
-            string = m.context.value["string"]
-            # print("parent title is " + data[parent]['title'])
-            # print("block id is " + m.value)
-            # search to see if the parent is a private page
-            if data[parent]['title'] in page_uuids:
-                private = False
-            else:
-                private = True
             try:
-                return page_uuids[data[parent]['title']], private, string
+                string = m.context.value["string"]
+                # print("parent title is " + data[parent]['title'])
+                # print("block id is " + m.value)
+                # search to see if the parent is a private page
+                if data[parent]['title'] in page_uuids:
+                    private = False
+                else:
+                    private = True
+                try:
+                    return page_uuids[data[parent]['title']], private, string
+                except KeyError:
+                    return private_pages[data[parent]['title']], private, string
             except KeyError:
-                return private_pages[data[parent]['title']], private, string
+                pass
         else:
             pass
 
@@ -464,7 +504,7 @@ def _processAttribute(match, block):
     '''
     # TODO save attributes for specific templates
     name = renderMarkdown(match.group(1))
-    return f'<span class="attribute">{name}::</span>'
+    return f'<span class="attribute">{name}</span>'
 
 
 def _processTextVersion(match, block):
@@ -501,7 +541,7 @@ def _processSlider(match, block, properties):
 
 
 def _processQueries(match, block):
-    print(match.group(1))
+    # print(match.group(1))
     return "<b>Query:</b>" + match.group(1)
 
 
@@ -512,7 +552,7 @@ def _processCheckmark(checked):
         return '<span class="checkbox"><input class="check" type="checkbox" onclick="return false;"></span>'
 
 
-def renderMarkdown(text, ignoreLinks=False, heading=False, alignment=False, properties=False):
+def renderMarkdown(text, ignoreLinks=False, heading=False, alignment=False, properties=False, view_type=False):
     isAttribute = False
     if ':hiccup' in text:
         # THIS DOES NOT WORK WELL !!! VERY BROKEN
@@ -554,7 +594,6 @@ def renderMarkdown(text, ignoreLinks=False, heading=False, alignment=False, prop
     text = re.sub(r'\{\{\[\[slider\]\](.*)\}\}', lambda x: _processSlider(x, text, properties), text)  # sliders
 
     text = re.sub(r'(\{\{or:(.+?)\}\})', lambda x: _processTextVersion(x, text), text)  # text versioning
-
     if ignoreLinks:
         text = re.sub(r'\[\[(.+?)\]\]', r'\1', text)  # page links
         text = re.sub(r'\[([^\[\]]+?)\]\((.+?)\)', r'\1', text)  # external links
@@ -586,6 +625,7 @@ def renderMarkdown(text, ignoreLinks=False, heading=False, alignment=False, prop
         else:
             # print("block is private")
             # print(blockText)
+
             pass
 
     text = re.sub(r'\(\((.+?)\)\)', lambda x: isBlockPrivate(x.group(1), text), text)  # block ref
@@ -659,9 +699,11 @@ def main():
         # TODO create new templates
         # TODO use correct template
         # TODO figure out how templating works
+
         renderPage(page, './public', template='template.html')
         renderPage(page, './public', template='embed.html', filename='embed.html')
         renderPage(page, './public', template='page.html', filename='page.html')
+        renderPage(page, './public', template='no_refs.html', filename='no_refs.html')
         try:
             template_data = page_data[page['title']]
             # print(len(template_data["references"]))
@@ -680,6 +722,8 @@ def main():
 if __name__ == '__main__':
     # load json backup
     # jsonFile = 'Theme Tester.json'
+    # jsonFile = 'NewTest.json'
     jsonFile = 'MattPublic.json'
+    # jsonFile = 'About.json'
     main()
     # pp.pprint(notes_graph)

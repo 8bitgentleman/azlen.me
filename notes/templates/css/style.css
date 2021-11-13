@@ -126,7 +126,7 @@ body {
     box-shadow: 0px 8px 14px rgba(0, 0, 0, 0.05);
 }
 
-h1 {
+h1.page-title {
     margin-top: 0;
 }
 /* ------ links ------ */
@@ -435,6 +435,9 @@ span.attribute {
   font-weight: bold;
   list-style: none;
 }
+span.attribute:after{
+  content:"::"
+}
 
 body.dark #twitter-widget-0 {
     filter: invert() hue-rotate(180deg) !important;
@@ -541,13 +544,16 @@ blockquote {
     display: inline-block;
     font-family: "Helvetica", sans-serif;
     padding: 10px 20px;
-    margin: 0 0 20px;
+    margin: 20px 0 20px;
     font-size: .8em;
     font-style: italic;
     border: 1px solid #AAAAAA;
     border-left: 5px solid #AAAAAA;
     text-align: justify !important;
     background-color:hsl(0, 0%, 96%);
+}
+h1 + ul>li>blockquote{
+  margin: 0 0 20px;
 }
 blockquote:hover{
   box-shadow: 0 1px 1px 0 rgba(74, 74, 74, 0.4);

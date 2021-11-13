@@ -1,0 +1,289 @@
+<html>
+	<head>
+
+			<meta charset="utf-8">
+			<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+			<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/default.min.css">
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+		<style>
+			body,
+			html {
+				background: #f1f3f5;
+				font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
+					Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+				font-size: 14px;
+				line-height: 1.6;
+				color: #345;
+				overflow-x: hidden;
+			}
+
+			.CheatBody {
+				background: #fff;
+				box-shadow: 0 6px 8px rgba(85, 102, 119, 0.03),
+					0 1px 1px rgba(85, 102, 119, 0.4) !important;
+			}
+
+			.CheatBody > *:not(:first-child) {
+				border-top: 1px solid rgba(85, 102, 119, 0.18);
+			}
+
+			.cheats > ul {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(520px, 1fr));
+				grid-gap: 1rem;
+				list-style: none;
+			}
+			li {
+				padding: 0 8px 8px 8px;
+			}
+
+			.MarkdownBody h3 {
+				padding: 0;
+				margin: 0 0 16px;
+				font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
+					Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+				font-size: 17.1925px;
+				font-weight: 400;
+				color: #745fb5;
+			}
+
+			h2 {
+				padding: 0;
+				position: relative;
+				font-size: 30.0697899531px;
+				line-height: 1.2;
+				font-weight: 200;
+				font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
+					Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+				margin: 0 0 24px;
+			}
+
+			.local-anchor,
+			.local-anchor:visited {
+				color: #567;
+				text-decoration: inherit;
+				opacity: 0.5;
+				margin-right: 8px;
+			}
+
+			.local-anchor:target,
+			.local-anchor {
+				color: #745fb5;
+				opacity: 1;
+			}
+
+			.local-anchor:focus,
+			.local-anchor:hover {
+				color: #fff;
+				background: #745fb5;
+				opacity: 1;
+				text-decoration: inherit;
+			}
+
+			h3:after {
+				margin-left: 24px;
+				content: "";
+				display: inline-block;
+				vertical-align: middle;
+				width: 100%;
+				height: 1px;
+				background: linear-gradient(90deg, rgba(116, 95, 181, 0.2), transparent 80%);
+			}
+
+			h3 {
+				margin-top: 8px;
+				margin-bottom: 16px;
+				white-space: nowrap;
+				overflow: hidden;
+			}
+
+			.MarkdownBody h4 {
+				margin: 0;
+				font-size: 11.3043478261px;
+				padding: 4px 16px;
+				font-weight: 400;
+				background: #f8f9fa;
+				color: #567;
+			}
+
+			p {
+				background: #f8f9fa;
+				color: #345;
+				padding: 16px;
+				margin: 0;
+				display: block;
+				/* 	margin-block-start: 1em; */
+				/* 	margin-block-end: 1em; */
+				margin-inline-start: 0px;
+				margin-inline-end: 0px;
+			}
+
+			pre,
+			code {
+				font-family: cousine, SFMono-Regular, Consolas, Menlo, Liberation Mono,
+					Ubuntu Mono, Courier, monospace;
+				margin: 0;
+				padding: 16px;
+				padding-top: 0;
+				box-shadow: none;
+				border-left: 0;
+				overflow: hidden;
+				overflow-x: auto;
+				background: #fff !important;
+				/* 	background: #555 !important; */
+				font-size: 0.96em !important;
+				line-height: 1.5 !important;
+			}
+
+			/* codecopy button*/
+			.copy-code-button {
+				color: #272822;
+				background-color: #fff;
+				border-color: #272822;
+				border: 1px solid;
+				border-radius: 0 0 3px 3px;
+
+				/* right-align */
+				display: block;
+				margin-left: auto;
+				margin-right: 0;
+
+				margin-top: -2px;
+				padding: 3px 8px;
+				font-size: 0.8em;
+			}
+
+			.copy-code-button:hover {
+				cursor: pointer;
+				background-color: #f2f2f2;
+			}
+
+			.copy-code-button:focus {
+				/* Avoid an ugly focus outline on click in Chrome,
+						 but darken the button for accessibility.
+						 See https://stackoverflow.com/a/25298082/1481479 */
+				background-color: #e6e6e6;
+				outline: 0;
+			}
+
+			.copy-code-button:active {
+				background-color: #d9d9d9;
+			}
+
+			.highlight pre {
+				/* Avoid pushing up the copy buttons. */
+				margin: 0;
+			}
+
+
+		</style>
+	</head>
+	<body>
+		<section class="cheats" id="cheats">
+			<h2 id="my-functions"><a href="#my-functions" class="local-anchor anchor">#</a>My Functions</h2>
+			<ul>
+				<li class="MarkdownBody">
+					<h3 id="testing">List files in a directory</h3>
+					<div class="CheatBody">
+						<p>Return all files of a specific extension from a directory as a list</p>
+						<pre id="snippet"><code class="language-python">def listFilesOfSpecificFormat(directory, extension):
+
+    '''list all files of a specific extension from a directory'''
+    specific_files = []
+
+    for file in os.listdir(directory):
+    	if file.endswith("." + extension):
+    		specific_files.append(os.path.join(directory, file))
+    specific_files = sorted(specific_files)
+    return specific_files
+	</code></pre>
+					</div>
+				</li>
+				<li class="MarkdownBody">
+					<h3 id="testing">Flatten irregular nested list</h3>
+					<div class="CheatBody">
+						<pre id="snippet"><code class="language-python">import collections
+
+def flatten(l):
+    for el in l:
+        if isinstance(el, collections.Iterable) and not isinstance(el, (str, bytes)):
+            yield from flatten(el)
+        else:
+            yield el</code></pre>
+						<h4 id="drop"><a href="https://stackoverflow.com/questions/2158395/flatten-an-irregular-list-of-lists" class="local-anchor anchor">Stackoverflow Source</a></h4>
+					</div>
+				</li>
+				<li class="MarkdownBody">
+					<h3 id="testing">Testing</h3>
+					<div class="CheatBody">
+						<p>Test paragraph</p>
+						<pre id="snippet"><code class="language-python">import webbrowser
+new = 2 # open in a new tab, if possible
+
+# open a public URL, in this case, the webbrowser docs
+url = "http://docs.python.org/library/webbrowser.html"
+webbrowser.open(url,new=2)
+</code></pre>
+						<h4 id="drop">Test H4</h4>
+					</div>
+				</li>
+			</ul>
+		</section>
+		<script type="text/javascript">
+      // https://www.dannyguo.com/blog/how-to-add-copy-to-clipboard-buttons-to-code-blocks-in-hugo/
+
+			$(document).ready(function () {
+				hljs.initHighlightingOnLoad();
+			});
+
+			function addCopyButtons(clipboard) {
+					document.querySelectorAll('pre > code').forEach(function (codeBlock) {
+							var button = document.createElement('button');
+							button.className = 'copy-code-button';
+							button.type = 'button';
+							button.innerText = 'Copy';
+
+							button.addEventListener('click', function () {
+									clipboard.writeText(codeBlock.innerText).then(function () {
+											/* Chrome doesn't seem to blur automatically,
+												 leaving the button in a focused state. */
+											button.blur();
+
+											button.innerText = 'Copied!';
+
+											setTimeout(function () {
+													button.innerText = 'Copy';
+											}, 2000);
+									}, function (error) {
+											button.innerText = 'Error';
+									});
+							});
+
+							var pre = codeBlock.parentNode;
+							if (pre.parentNode.classList.contains('highlight')) {
+									var highlight = pre.parentNode;
+									highlight.parentNode.insertBefore(button, highlight);
+							} else {
+									pre.insertBefore(button, pre.firstChild);
+							}
+					});
+			}
+
+			if (navigator && navigator.clipboard) {
+					addCopyButtons(navigator.clipboard);
+			} else {
+					var script = document.createElement('script');
+					script.src = 'https://cdnjs.cloudflare.com/ajax/libs/clipboard-polyfill/2.7.0/clipboard-polyfill.promise.js';
+					script.integrity = 'sha256-waClS2re9NUbXRsryKoof+F9qc1gjjIhc2eT7ZbIv94=';
+					script.crossOrigin = 'anonymous';
+					script.onload = function() {
+							addCopyButtons(clipboard);
+					};
+
+					document.body.appendChild(script);
+			}
+		</script>
+	</body>
+
+</html>
